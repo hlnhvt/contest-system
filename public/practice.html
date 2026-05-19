@@ -410,6 +410,57 @@
       box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
       transform: translateY(-2px);
     }
+
+    /* ── Mobile menu ── */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed; top: 12px; right: 12px; z-index: 200;
+      width: 40px; height: 40px; border-radius: 10px;
+      background: #4338ca; color: white; border: none;
+      align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: background 0.15s;
+    }
+    .mobile-menu-btn:hover { background: #3730a3; }
+    .mobile-backdrop {
+      display: none;
+      position: fixed; inset: 0; z-index: 99;
+      background: rgba(0,0,0,0.45); backdrop-filter: blur(2px);
+      opacity: 0; transition: opacity 0.25s;
+      pointer-events: none;
+    }
+    .mobile-backdrop.visible { opacity: 1; pointer-events: all; }
+
+    @media (max-width: 767px) {
+      .mobile-menu-btn { display: flex; }
+      .mobile-backdrop { display: block; }
+      .sidebar-toggle-btn { display: none !important; }
+      #pageContent, #pageContent.sidebar-expanded { margin-left: 0 !important; }
+      .contest-sidebar, .contest-sidebar.collapsed {
+        width: 260px !important;
+        transform: translateX(-260px);
+        transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+        z-index: 100;
+        overflow: hidden !important;
+      }
+      .contest-sidebar.mobile-open { transform: translateX(0); }
+      .contest-sidebar.collapsed .hide-on-collapse { display: flex !important; }
+      .contest-sidebar.collapsed .sidebar-brand {
+        padding: 16px 14px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+      }
+      .contest-sidebar.collapsed .sidebar-nav-item {
+        padding: 10px 14px !important;
+        justify-content: flex-start !important;
+      }
+      .contest-sidebar.collapsed .sidebar-nav-item svg { margin-left: 0 !important; }
+      .sidebar-tooltip { display: none !important; }
+    }
+    @media (min-width: 768px) {
+      .mobile-menu-btn { display: none !important; }
+      .mobile-backdrop { display: none !important; }
+    }
   </style>
 </head>
 
@@ -1145,7 +1196,22 @@
 
     // ── Init ──────────────────────────────────────────────────
     initSupabase();
+
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('mobileBackdrop');
+      const isOpen = sidebar.classList.toggle('mobile-open');
+      backdrop.classList.toggle('visible', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
   </script>
+
+<!-- Mobile hamburger button -->
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+<!-- Mobile backdrop -->
+<div class="mobile-backdrop" id="mobileBackdrop" onclick="toggleMobileMenu()"></div>
 </body>
 
 </html>
