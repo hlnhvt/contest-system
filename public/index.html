@@ -280,16 +280,19 @@
 <div id="pageContent">
 
 <!-- Header -->
-<header class="hero-gradient text-white relative overflow-hidden">
-  <!-- Decimal number pattern -->
-  <div class="num-bg" id="numBg" aria-hidden="true"></div>
+<header class="hero-gradient text-white relative">
+  <!-- Decorative background wrapper to prevent horizontal scroll overflow while letting dropdowns overflow -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none" style="z-index: 0;">
+    <!-- Decimal number pattern -->
+    <div class="num-bg" id="numBg" aria-hidden="true"></div>
 
-  <!-- Orbs -->
-  <div class="orb w-80 h-80 bg-emerald-300/10 -top-20 -left-20"></div>
-  <div class="orb w-96 h-96 bg-green-400/8 -bottom-32 -right-16"></div>
-  <div class="orb w-64 h-64 bg-teal-300/10 top-0 right-1/3"></div>
+    <!-- Orbs -->
+    <div class="orb w-80 h-80 bg-emerald-300/10 -top-20 -left-20"></div>
+    <div class="orb w-96 h-96 bg-green-400/8 -bottom-32 -right-16"></div>
+    <div class="orb w-64 h-64 bg-teal-300/10 top-0 right-1/3"></div>
+  </div>
 
-  <div class="relative max-w-5xl mx-auto px-5 py-10 flex items-center justify-between">
+  <div class="relative max-w-5xl mx-auto px-5 py-10 flex items-center justify-between z-10">
     <div class="animate-fade-up">
       <div class="flex items-center gap-3 mb-2">
         <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center animate-float overflow-hidden shadow-lg">
@@ -301,14 +304,18 @@
     </div>
 
     <!-- User Profile Widget -->
-    <div id="userWidget" class="animate-fade-in hidden flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
-      <div id="userWidgetContent" class="flex items-center gap-2 cursor-pointer relative group" onclick="document.getElementById('logoutDropdown').classList.toggle('hidden')">
+    <div id="userWidget" class="animate-fade-in hidden flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm relative">
+      <div id="userWidgetContent" class="flex items-center gap-2 cursor-pointer relative group" onclick="event.stopPropagation(); document.getElementById('logoutDropdown').classList.toggle('hidden')">
         <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm uppercase" id="userAvatar">U</div>
         <span class="text-sm font-medium" id="userName">User</span>
         <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         
         <!-- Dropdown -->
-        <div id="logoutDropdown" class="hidden absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+        <div id="logoutDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 text-gray-800">
+          <div class="px-4 py-2 border-b border-gray-100">
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Tài khoản</p>
+            <p class="text-xs text-gray-600 truncate mt-0.5" id="userEmail">-</p>
+          </div>
           <button onclick="handleLogout(event)" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Đăng xuất
           </button>
@@ -413,6 +420,7 @@ async function initSupabase() {
     
     document.getElementById('userName').textContent = displayName;
     document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+    document.getElementById('userEmail').textContent = currentUser.email || '';
     document.getElementById('userWidget').classList.remove('hidden');
     document.getElementById('loginBtnGuest').classList.add('hidden');
 
@@ -443,6 +451,11 @@ async function handleLogout(e) {
   await supabaseClient.auth.signOut();
   window.location.reload();
 }
+
+window.addEventListener('click', () => {
+  const dropdown = document.getElementById('logoutDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+});
 
 function getStatus(c) {
   const now = Date.now();
