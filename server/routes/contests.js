@@ -5,7 +5,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const { data, error } = await supabase
     .from('contests')
-    .select('id, name, description, start_time, end_time')
+    .select('id, name, description, start_time, end_time, require_login')
     .eq('is_public', true)
     .order('start_time', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
@@ -193,6 +193,43 @@ router.get('/:id/scoreboard', async (req, res) => {
       freezeStart: freezeTime.toISOString()
     }
   });
+});
+
+router.get('/:id/evaluation', async (req, res) => {
+  const contestId = req.params.id;
+  const participantId = req.query.participantId;
+  
+  if (!participantId) return res.status(400).json({ error: 'Thiếu participantId' });
+
+  const { data: contest } = await supabase.from('contests').select('scoring_scale').eq('id', contestId).single();
+  if (!contest) return res.status(404).json({ error: 'Không tìm thấy kỳ thi' });
+
+  const { count: totalQuestions } = await supabase.from('contest_questions')
+    .select('id', { count: 'exact', head: true })
+    .eq('contest_id', contestId);
+
+  const { count: score } = await supabase.from('submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('contest_id', contestId)
+    .eq('participant_id', participantId)
+    .eq('status', 'correct');
+
+  const t = totalQuestions || 0;
+  const s = score || 0;
+  const pct = t > 0 ? Math.round((s / t) * 100) : 0;
+  
+  const DEFAULT_SCALE = [
+    { min: 0,  max: 39,  label: 'Cần cải thiện', color: '#ef4444' },
+    { min: 40, max: 59,  label: 'Trung bình',    color: '#f59e0b' },
+    { min: 60, max: 74,  label: 'Khá',           color: '#3b82f6' },
+    { min: 75, max: 89,  label: 'Giỏi',          color: '#8b5cf6' },
+    { min: 90, max: 100, label: 'Xuất sắc',      color: '#10b981' }
+  ];
+  
+  const scale = Array.isArray(contest.scoring_scale) && contest.scoring_scale.length ? contest.scoring_scale : DEFAULT_SCALE;
+  const level = scale.find(r => pct >= r.min && pct <= r.max) || scale[scale.length - 1];
+
+  res.json({ score: s, total: t, pct, level });
 });
 
 module.exports = router;

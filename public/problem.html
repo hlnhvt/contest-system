@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bài tập - ACM-ICPC</title>
+<title>Bài tập - Hệ thống đánh giá</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -176,7 +176,7 @@ async function init() {
   problemData = await problemRes.json();
   contestData = await contestRes.json();
 
-  document.title = `Bài ${problemData.label}: ${problemData.title} - ACM-ICPC`;
+  document.title = `Bài ${problemData.label}: ${problemData.title} - Hệ thống đánh giá`;
   document.getElementById('problemTitle').textContent = `Bài ${problemData.label}: ${problemData.title}`;
 
   renderStatement();

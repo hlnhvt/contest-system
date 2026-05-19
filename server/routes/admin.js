@@ -21,13 +21,14 @@ router.get('/contests', async (req, res) => {
 });
 
 router.post('/contests', async (req, res) => {
-  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment } = req.body;
+  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment, scoring_scale } = req.body;
   const { data, error } = await supabase.from('contests')
     .insert({ 
       name, description, start_time, end_time, 
       is_public: is_public ?? true,
       require_login: require_login ?? false,
-      is_ai_assessment: is_ai_assessment ?? false
+      is_ai_assessment: is_ai_assessment ?? false,
+      scoring_scale: scoring_scale || null
     })
     .select().single();
   if (error) return res.status(500).json({ error: error.message });
@@ -35,16 +36,62 @@ router.post('/contests', async (req, res) => {
 });
 
 router.put('/contests/:id', async (req, res) => {
-  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment } = req.body;
+  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment, scoring_scale } = req.body;
   const { data, error } = await supabase.from('contests')
     .update({ 
       name, description, start_time, end_time, is_public,
       require_login: require_login ?? false,
-      is_ai_assessment: is_ai_assessment ?? false
+      is_ai_assessment: is_ai_assessment ?? false,
+      scoring_scale: scoring_scale || null
     })
     .eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
+});
+
+router.post('/contests/auto', async (req, res) => {
+  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment, scoring_scale, count, difficulty } = req.body;
+  
+  if (!count || count < 1) return res.status(400).json({ error: 'Số lượng câu hỏi không hợp lệ' });
+
+  let query = supabase.from('questions').select('id');
+  if (difficulty !== undefined && difficulty !== null && difficulty !== '') {
+    query = query.eq('difficulty', difficulty);
+  }
+  const { data: qData, error: qError } = await query;
+  if (qError) return res.status(500).json({ error: qError.message });
+  
+  if (!qData || qData.length < count) {
+    return res.status(400).json({ error: `Ngân hàng chỉ có ${qData?.length || 0} câu hỏi phù hợp, không đủ ${count} câu.` });
+  }
+
+  // Shuffle and pick
+  const shuffled = qData.sort(() => 0.5 - Math.random());
+  const selectedIds = shuffled.slice(0, count).map(q => q.id);
+
+  // Create contest
+  const { data: contestData, error: contestError } = await supabase.from('contests')
+    .insert({ 
+      name, description, start_time, end_time, 
+      is_public: is_public ?? true,
+      require_login: require_login ?? false,
+      is_ai_assessment: is_ai_assessment ?? false,
+      scoring_scale: scoring_scale || null
+    })
+    .select().single();
+  if (contestError) return res.status(500).json({ error: contestError.message });
+
+  // Create contest_questions
+  const rows = selectedIds.map((id, index) => ({
+    contest_id: contestData.id,
+    question_id: id,
+    label: `Q${index + 1}`,
+    order_num: index
+  }));
+  const { error: cqError } = await supabase.from('contest_questions').insert(rows);
+  if (cqError) return res.status(500).json({ error: cqError.message });
+
+  res.json({ ...contestData, auto_generated_count: count });
 });
 
 router.delete('/contests/:id', async (req, res) => {
@@ -239,6 +286,40 @@ router.post('/practice-sets', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Tên bộ ôn tập không được để trống' });
   const { data, error } = await supabase.from('practice_sets')
     .insert({ name, description: description || '', question_ids: question_ids || [], scoring_scale: scoring_scale || null, is_public: is_public ?? true })
+    .select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+router.post('/practice-sets/auto', async (req, res) => {
+  const { name, description, scoring_scale, is_public, count, difficulty } = req.body;
+  
+  if (!name) return res.status(400).json({ error: 'Tên bộ ôn tập không được để trống' });
+  if (!count || count < 1) return res.status(400).json({ error: 'Số lượng câu hỏi không hợp lệ' });
+
+  let query = supabase.from('questions').select('id');
+  if (difficulty !== undefined && difficulty !== null && difficulty !== '') {
+    query = query.eq('difficulty', difficulty);
+  }
+  const { data: qData, error: qError } = await query;
+  if (qError) return res.status(500).json({ error: qError.message });
+  
+  if (!qData || qData.length < count) {
+    return res.status(400).json({ error: `Ngân hàng chỉ có ${qData?.length || 0} câu hỏi phù hợp, không đủ ${count} câu.` });
+  }
+
+  // Shuffle and pick
+  const shuffled = qData.sort(() => 0.5 - Math.random());
+  const selectedIds = shuffled.slice(0, count).map(q => q.id);
+
+  const { data, error } = await supabase.from('practice_sets')
+    .insert({ 
+      name, 
+      description: description || '', 
+      question_ids: selectedIds, 
+      scoring_scale: scoring_scale || null, 
+      is_public: is_public ?? true 
+    })
     .select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);

@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS contests (
   is_published BOOLEAN DEFAULT FALSE,
   require_login BOOLEAN DEFAULT FALSE,
   is_ai_assessment BOOLEAN DEFAULT FALSE,
+  scoring_scale JSONB DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -65,6 +66,8 @@ CREATE TABLE questions (
 -- ALTER TABLE submissions ADD COLUMN IF NOT EXISTS answer JSONB DEFAULT NULL;
 -- Migration v4 - organization field:
 -- ALTER TABLE participants ADD COLUMN IF NOT EXISTS organization TEXT DEFAULT '';
+-- Migration v5 - scoring scale cho contests
+-- ALTER TABLE contests ADD COLUMN IF NOT EXISTS scoring_scale JSONB DEFAULT NULL;
 
 -- Liên kết câu hỏi vào contest (với label A, B, C...)
 CREATE TABLE contest_questions (

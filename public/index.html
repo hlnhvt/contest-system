@@ -415,6 +415,15 @@ async function initSupabase() {
     document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
     document.getElementById('userWidget').classList.remove('hidden');
     document.getElementById('loginBtnGuest').classList.add('hidden');
+
+    // Auto-join nếu có kỳ thi đang chờ sau khi đăng nhập
+    const pendingContestId = localStorage.getItem('pendingContestId');
+    if (pendingContestId) {
+      localStorage.removeItem('pendingContestId');
+      selectedContest = pendingContestId;
+      selectedRequireLogin = true;
+      await submitJoin(true);
+    }
   } else {
     currentUser = null;
     document.getElementById('userWidget').classList.add('hidden');
@@ -543,9 +552,13 @@ async function openJoin(id, name, requireLogin) {
 
   if (requireLogin) {
     if (!currentUser) {
+      // Lưu lại kỳ thi để auto-join sau khi đăng nhập xong
+      localStorage.setItem('pendingContestId', id);
+      alert('Kỳ thi này yêu cầu đăng nhập Google để tham gia. Bạn sẽ được chuyển đến trang đăng nhập.');
       handleLogin();
       return;
     }
+    // Đã đăng nhập → auto-join luôn
     await submitJoin(true);
     return;
   }

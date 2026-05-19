@@ -32,7 +32,7 @@ app.get('*', (req, res) => {
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`ACM-ICPC Contest System → http://localhost:${PORT}`);
+    console.log(`Hệ thống đánh giá → http://localhost:${PORT}`);
   });
 }
 

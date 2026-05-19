@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ACM-ICPC Contest</title>
+<title>Hệ thống đánh giá</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -245,7 +245,20 @@ body { overflow-x: hidden; }
 .rank-cell { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; color: #475569; }
 .medal { font-size: 16px; }
 
-/* Solved / penalty columns */
+/* Result circle */
+.result-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  border: 6px solid currentColor;
+}
+
 .slv-cell  { font-weight: 800; font-size: 16px; color: #1a5c2e; text-align: center; }
 .time-cell { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #475569; text-align: center; }
 
@@ -481,6 +494,18 @@ body { overflow-x: hidden; }
     </div>
   </div>
 
+  <!-- Evaluation Banner (Ended Contest) -->
+  <div id="evaluationBanner" class="hidden mb-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between gap-4">
+    <div>
+      <h3 class="font-bold text-emerald-800 text-base">Kỳ thi đã kết thúc</h3>
+      <p class="text-sm text-emerald-600 mt-0.5">Hệ thống đã có kết quả đánh giá năng lực chi tiết của bạn.</p>
+    </div>
+    <button onclick="viewEvaluation()" class="flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-sm transition flex items-center gap-2 text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+      Xem đánh giá năng lực
+    </button>
+  </div>
+
   <!-- Progress bar -->
   <div class="progress-wrapper">
     <div class="progress-bg-fill" id="progressFill" style="width:0%">
@@ -573,6 +598,21 @@ body { overflow-x: hidden; }
   </div>
 </div>
 
+<!-- EVALUATION MODAL -->
+<div id="evaluationModal" class="modal-overlay hidden" onclick="handleEvalOverlayClick(event)">
+  <div class="modal-box max-w-sm p-7 text-center">
+    <h2 class="text-xl font-bold text-gray-800 mb-6">Đánh giá năng lực</h2>
+    <div class="flex justify-center mb-6">
+      <div class="result-circle" id="evalResultCircle">
+        <span id="evalResultPct">0%</span>
+        <span class="text-sm font-semibold mt-1" id="evalResultFraction">0/0</span>
+      </div>
+    </div>
+    <div class="inline-block px-5 py-2 rounded-full text-sm font-bold mb-6" id="evalResultLevelBadge">-</div>
+    <button onclick="document.getElementById('evaluationModal').classList.add('hidden')" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition">Đóng</button>
+  </div>
+</div>
+
 <script>
 const params = new URLSearchParams(location.search);
 const CONTEST_ID = params.get('id');
@@ -621,7 +661,7 @@ async function init() {
   questions   = await questionsRes.json();
   const config = await configRes.json();
 
-  document.title = contestData.name + ' - ACM-ICPC';
+  document.title = contestData.name + ' - Hệ thống đánh giá';
   document.getElementById('contestName').textContent = contestData.name;
   if (contestData.description) {
     document.getElementById('contestDesc').textContent = contestData.description;
@@ -1297,6 +1337,11 @@ function startTimer() {
         txt.style.color = '#fff';
         if (shimmer) shimmer.style.display = 'none';
       }
+      
+      // Show evaluation banner if user participated
+      if (myParticipantId) {
+        document.getElementById('evaluationBanner').classList.remove('hidden');
+      }
     }
   }
 
@@ -1344,6 +1389,33 @@ function toggleSidebar() {
   }
   el.textContent = t;
 })();
+
+async function viewEvaluation() {
+  const res = await fetch(`/api/contests/${CONTEST_ID}/evaluation?participantId=${myParticipantId}`);
+  if (!res.ok) { alert('Không thể lấy đánh giá'); return; }
+  const data = await res.json();
+  
+  const circle = document.getElementById('evalResultCircle');
+  const pct = document.getElementById('evalResultPct');
+  const fraction = document.getElementById('evalResultFraction');
+  const badge = document.getElementById('evalResultLevelBadge');
+  
+  circle.style.color = data.level.color;
+  pct.textContent = `${data.pct}%`;
+  fraction.textContent = `${data.score}/${data.total}`;
+  
+  badge.textContent = data.level.label;
+  badge.style.backgroundColor = data.level.color + '20';
+  badge.style.color = data.level.color;
+  
+  document.getElementById('evaluationModal').classList.remove('hidden');
+}
+
+function handleEvalOverlayClick(e) {
+  if (e.target.id === 'evaluationModal') {
+    e.target.classList.add('hidden');
+  }
+}
 
 init();
 </script>

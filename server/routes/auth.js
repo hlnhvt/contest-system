@@ -39,6 +39,11 @@ router.post('/join', async (req, res) => {
 
   if (ce || !contest) return res.status(404).json({ error: 'Contest not found' });
 
+  // Kiểm tra yêu cầu đăng nhập Google
+  if (contest.require_login && !userId) {
+    return res.status(403).json({ error: 'Kỳ thi này yêu cầu đăng nhập Google để tham gia' });
+  }
+
   const now = new Date();
   const end = new Date(contest.end_time);
   if (now > end) return res.status(400).json({ error: 'Contest has ended' });
