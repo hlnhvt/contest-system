@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hệ thống kiểm tra đánh giá mức độ ứng dụng AI</title>
+<link rel="icon" type="image/png" href="/photo/images.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f0f4f8; overflow-x: hidden; }
+
+  /* ── Sidebar layout ── */
+  .contest-sidebar {
+    width: 215px; flex-shrink: 0;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    background: #fff; border-right: 1px solid #e5e7eb;
+    display: flex; flex-direction: column;
+    z-index: 50; overflow: hidden;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    transition: width 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  .contest-sidebar.collapsed { width: 40px; overflow: visible; }
+  .contest-sidebar.collapsed .hide-on-collapse { display: none !important; }
+  .contest-sidebar.collapsed .sidebar-brand { padding: 16px 0; display: flex; flex-direction: column; align-items: center; }
+  .contest-sidebar.collapsed .sidebar-brand > div { margin-bottom: 0; }
+  .contest-sidebar.collapsed .sidebar-nav-item { padding: 10px 0; justify-content: center; }
+  .contest-sidebar.collapsed .sidebar-nav-item svg { margin-left: -3px; }
+  .sidebar-toggle-btn {
+    width: 40px; min-height: 40px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-bottom: 1px solid #e5e7eb;
+    cursor: pointer; color: #94a3b8; transition: all 0.15s;
+  }
+  .sidebar-toggle-btn:hover { color: #16a34a; background: #f0fdf4; }
+  .sidebar-brand {
+    background: linear-gradient(160deg, #052e16, #064e3b 50%, #065f46);
+    padding: 16px 14px; flex-shrink: 0;
+  }
+  .sidebar-nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 14px; font-size: 13px; font-weight: 500;
+    color: #64748b; cursor: pointer; transition: all 0.18s;
+    border-left: 3px solid transparent; border: none;
+    width: 100%; text-align: left; background: transparent;
+    position: relative; text-decoration: none;
+  }
+  .sidebar-tooltip {
+    position: absolute; left: 100%; top: 50%;
+    transform: translateY(-50%) translateX(10px);
+    background: #1e293b; color: white;
+    padding: 6px 12px; border-radius: 6px;
+    font-size: 14px; font-weight: 500;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; visibility: hidden; z-index: 50;
+    transition: opacity 0.05s ease-out, transform 0.05s ease-out;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  }
+  .sidebar-tooltip::before {
+    content: ''; position: absolute;
+    right: 100%; top: 50%; transform: translateY(-50%);
+    border-width: 5px; border-style: solid;
+    border-color: transparent #1e293b transparent transparent;
+  }
+  .contest-sidebar.collapsed .sidebar-nav-item:hover .sidebar-tooltip {
+    opacity: 1; visibility: visible;
+    transform: translateY(-50%) translateX(14px);
+  }
+  .sidebar-nav-item:hover { color: #16a34a; background: #f0fdf4; border-left-color: #86efac; }
+  .sidebar-nav-item.active { color: #16a34a; font-weight: 700; background: #f0fdf4; border-left-color: #16a34a; }
+  #pageContent { margin-left: 40px; transition: margin-left 0.25s cubic-bezier(.4,0,.2,1); }
+  #pageContent.sidebar-expanded { margin-left: 215px; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.93); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%      { transform: translateY(-8px); }
+  }
+  @keyframes gradientMove {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+    70%  { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+    100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .animate-fade-up  { animation: fadeUp 0.55s ease both; }
+  .animate-fade-in  { animation: fadeIn 0.4s ease both; }
+  .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(.34,1.56,.64,1) both; }
+  .animate-float    { animation: float 3s ease-in-out infinite; }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.12s; }
+  .stagger-3 { animation-delay: 0.19s; }
+  .stagger-4 { animation-delay: 0.26s; }
+  .stagger-5 { animation-delay: 0.33s; }
+
+  /* Hero gradient - green theme */
+  .hero-gradient {
+    background: linear-gradient(135deg, #052e16 0%, #064e3b 30%, #065f46 65%, #059669 100%);
+    background-size: 300% 300%;
+    animation: gradientMove 10s ease infinite;
+  }
+
+  /* Decimal number pattern overlay */
+  .num-bg {
+    position: absolute; inset: 0;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 11px; color: rgba(255,255,255,0.055);
+    white-space: pre; overflow: hidden; pointer-events: none;
+    padding: 6px 14px; line-height: 2.1;
+    letter-spacing: 4px; user-select: none; z-index: 0;
+  }
+
+  /* Glass card */
+  .glass {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Contest card */
+  .contest-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(226,232,240,0.8);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    overflow: hidden;
+    position: relative;
+  }
+  .contest-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border-color: #6ee7b7;
+  }
+  .contest-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #22c55e, #10b981, #06b6d4);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .contest-card:hover::before { opacity: 1; }
+
+  /* Status badge */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 9999px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+  }
+  .badge-running  { background: #dcfce7; color: #15803d; }
+  .badge-upcoming { background: #dbeafe; color: #1d4ed8; }
+  .badge-ended    { background: #f1f5f9; color: #64748b; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-running .badge-dot  { background: #16a34a; animation: pulse-ring 1.5s infinite; }
+  .badge-upcoming .badge-dot { background: #2563eb; }
+  .badge-ended .badge-dot    { background: #94a3b8; }
+
+  /* Join button */
+  .join-btn {
+    background: linear-gradient(135deg, #16a34a, #059669);
+    color: white; border: none; border-radius: 10px;
+    padding: 10px 22px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(22,163,74,0.4);
+  }
+  .join-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(22,163,74,0.5);
+  }
+  .join-btn:active { transform: translateY(0); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.65);
+    backdrop-filter: blur(4px);
+    z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-card {
+    background: white; border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+    width: 100%; max-width: 420px;
+    animation: scaleIn 0.28s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  /* Input */
+  .nice-input {
+    width: 100%; border: 2px solid #e2e8f0; border-radius: 12px;
+    padding: 12px 16px; font-size: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none; color: #1e293b;
+  }
+  .nice-input:focus { border-color: #16a34a; box-shadow: 0 0 0 4px rgba(22,163,74,0.12); }
+  .nice-input::placeholder { color: #94a3b8; }
+
+  /* Decorative orbs */
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 10px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="contest-sidebar collapsed" id="contestSidebar">
+  <button onclick="toggleSidebar()" class="sidebar-toggle-btn" title="Mở/đóng menu">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="sidebar-brand">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain"/>
+      </div>
+      <span class="text-white/70 text-xs font-semibold uppercase tracking-wider hide-on-collapse">Kiểm tra AI</span>
+    </div>
+    <h2 class="font-bold text-white text-sm leading-tight hide-on-collapse">Hệ thống kiểm tra đánh giá mức độ ứng dụng AI</h2>
+    <p class="text-white/55 text-xs mt-1.5 leading-relaxed hide-on-collapse">Bài kiểm tra trực tuyến</p>
+  </div>
+  <nav class="p-2 pt-3 flex-1">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pb-1.5 hide-on-collapse">Điều hướng</p>
+    <a href="/" class="sidebar-nav-item active">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 11h4m-4 4h2"/></svg>
+      <span class="hide-on-collapse">Kỳ thi</span>
+      <div class="sidebar-tooltip">Kỳ thi</div>
+    </a>
+    <a href="/practice.html" class="sidebar-nav-item">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      <span class="hide-on-collapse">Ôn luyện</span>
+      <div class="sidebar-tooltip">Ôn luyện</div>
+    </a>
+  </nav>
+  <div class="px-4 py-3 border-t border-gray-100 hide-on-collapse">
+    <p class="text-xs text-gray-400">Powered by FPT IS</p>
+  </div>
+</aside>
+
+<div id="pageContent">
+
+<!-- Header -->
+<header class="hero-gradient text-white relative overflow-hidden">
+  <!-- Decimal number pattern -->
+  <div class="num-bg" id="numBg" aria-hidden="true"></div>
+
+  <!-- Orbs -->
+  <div class="orb w-80 h-80 bg-emerald-300/10 -top-20 -left-20"></div>
+  <div class="orb w-96 h-96 bg-green-400/8 -bottom-32 -right-16"></div>
+  <div class="orb w-64 h-64 bg-teal-300/10 top-0 right-1/3"></div>
+
+  <div class="relative max-w-5xl mx-auto px-5 py-10 flex items-center justify-between">
+    <div class="animate-fade-up">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center animate-float overflow-hidden shadow-lg">
+          <img src="/photo/images.png" alt="Logo" class="w-10 h-10 object-contain"/>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight leading-snug">Hệ thống kiểm tra đánh giá mức độ ứng dụng AI</h1>
+      </div>
+      <p class="text-emerald-200/80 text-sm mt-1" style="padding-left:56px">Bài kiểm tra trực tuyến · Kết quả cập nhật thời gian thực</p>
+    </div>
+
+    <!-- User Profile Widget -->
+    <div id="userWidget" class="animate-fade-in hidden flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
+      <div id="userWidgetContent" class="flex items-center gap-2 cursor-pointer relative group" onclick="document.getElementById('logoutDropdown').classList.toggle('hidden')">
+        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm uppercase" id="userAvatar">U</div>
+        <span class="text-sm font-medium" id="userName">User</span>
+        <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        
+        <!-- Dropdown -->
+        <div id="logoutDropdown" class="hidden absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+          <button onclick="handleLogout(event)" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Đăng xuất
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Login Button (Guest) -->
+    <button id="loginBtnGuest" onclick="handleLogin()" class="animate-fade-in hidden bg-white text-emerald-700 font-semibold px-5 py-2 rounded-full text-sm hover:bg-emerald-50 transition-colors shadow-md border border-white/40">
+      Đăng nhập
+    </button>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="max-w-5xl mx-auto px-5 py-10">
+
+  <!-- Join Modal -->
+  <div id="joinModal" class="modal-overlay hidden" onclick="handleOverlayClick(event)">
+    <div class="modal-card p-8">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-3 shadow-lg">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900">Tham gia kỳ thi</h2>
+        <p id="joinContestName" class="text-gray-400 text-sm mt-1 font-medium"></p>
+      </div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-2">Biệt danh của bạn <span class="text-red-400">*</span></label>
+      <input id="nicknameInput" type="text" maxlength="30" autocomplete="off"
+        placeholder="VD: Alice, SuperCoder, ..."
+        class="nice-input mb-1"/>
+      <p class="text-xs text-gray-400 mb-4">Tối thiểu 2 ký tự · Hiển thị trên bảng xếp hạng</p>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-2">Đơn vị / Tổ chức</label>
+      <input id="organizationInput" type="text" maxlength="60" autocomplete="organization"
+        placeholder="VD: FPT IS, Đại học Bách Khoa, ..."
+        class="nice-input mb-1"/>
+      <p class="text-xs text-gray-400 mb-4">Tuỳ chọn · Hiển thị dưới tên trên bảng xếp hạng</p>
+
+      <div id="joinError" class="hidden bg-red-50 text-red-600 text-sm rounded-xl px-4 py-2.5 mb-4 border border-red-100 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span id="joinErrorText"></span>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeJoin()"
+          class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-semibold hover:bg-gray-50 transition-colors text-sm">
+          Huỷ
+        </button>
+        <button onclick="submitJoin()" id="joinBtn"
+          class="join-btn flex-1 py-3 text-sm">
+          Vào thi ngay →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section header -->
+  <div class="flex items-center justify-between mb-7 animate-fade-up">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900">Kỳ thi</h2>
+      <p class="text-gray-400 text-sm mt-0.5">Chọn kỳ thi đang diễn ra để tham gia</p>
+    </div>
+    <button onclick="loadContests()"
+      class="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors px-3 py-2 rounded-lg hover:bg-blue-50">
+      <svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Làm mới
+    </button>
+  </div>
+
+  <!-- Contest list -->
+  <div id="contestList">
+    <!-- Skeletons while loading -->
+    <div class="space-y-4">
+      <div class="skeleton h-28 w-full"></div>
+      <div class="skeleton h-28 w-full"></div>
+      <div class="skeleton h-28 w-full stagger-1"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="text-center text-xs text-gray-400 py-8 mt-4">
+  Hệ thống kiểm tra đánh giá mức độ ứng dụng AI · Powered by FPT IS
+</footer>
+
+<script>
+let selectedContest = null;
+let selectedRequireLogin = false;
+let supabaseClient = null;
+let currentUser = null;
+
+async function initSupabase() {
+  const res = await fetch('/api/config');
+  const config = await res.json();
+  supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+  
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    const { data: profile } = await supabaseClient.from('profiles').select('display_name').eq('id', currentUser.id).single();
+    const displayName = profile?.display_name || currentUser.user_metadata?.full_name || 'User';
+    
+    document.getElementById('userName').textContent = displayName;
+    document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
+    document.getElementById('userWidget').classList.remove('hidden');
+    document.getElementById('loginBtnGuest').classList.add('hidden');
+  } else {
+    currentUser = null;
+    document.getElementById('userWidget').classList.add('hidden');
+    document.getElementById('loginBtnGuest').classList.remove('hidden');
+  }
+}
+
+async function handleLogin() {
+  await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/' }
+  });
+}
+
+async function handleLogout(e) {
+  if (e) e.stopPropagation();
+  await supabaseClient.auth.signOut();
+  window.location.reload();
+}
+
+function getStatus(c) {
+  const now = Date.now();
+  const s = new Date(c.start_time).getTime();
+  const e = new Date(c.end_time).getTime();
+  if (now < s) return 'upcoming';
+  if (now <= e) return 'running';
+  return 'ended';
+}
+
+function statusLabel(s) {
+  return { running: 'Đang diễn ra', upcoming: 'Sắp diễn ra', ended: 'Đã kết thúc' }[s];
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function getDuration(start, end) {
+  const ms = new Date(end) - new Date(start);
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `${h} giờ ${m > 0 ? m + ' phút' : ''}` : `${m} phút`;
+}
+
+async function loadContests() {
+  const icon = document.getElementById('refreshIcon');
+  icon.style.animation = 'spin-slow 0.6s linear';
+  setTimeout(() => icon.style.animation = '', 700);
+
+  const res = await fetch('/api/contests');
+  const contests = await res.json();
+  const el = document.getElementById('contestList');
+
+  if (!contests.length) {
+    el.innerHTML = `
+      <div class="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm animate-fade-up">
+        <svg class="w-14 h-14 mb-4 text-gray-200 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 11h4m-4 4h2"/></svg>
+        <p class="text-gray-400 font-medium">Chưa có kỳ thi nào được tạo</p>
+        <p class="text-gray-300 text-sm mt-1">Liên hệ admin để tạo kỳ thi mới</p>
+      </div>`;
+    return;
+  }
+
+  const cardSvgs = [
+    `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+    `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>`,
+    `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`,
+    `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>`,
+    `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>`,
+    `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>`
+  ];
+
+  el.innerHTML = `<div class="space-y-4">` + contests.map((c, i) => {
+    const s = getStatus(c);
+    const dur = getDuration(c.start_time, c.end_time);
+    const canJoin = s === 'running';
+    return `
+    <div class="contest-card animate-fade-up stagger-${Math.min(i+1,5)}">
+      <div class="p-6">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div class="flex items-start gap-4 flex-1 min-w-0">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${s==='running'?'from-green-400 to-emerald-600':s==='upcoming'?'from-blue-400 to-indigo-600':'from-gray-300 to-gray-400'} flex items-center justify-center shadow-sm flex-shrink-0">
+              ${cardSvgs[i % cardSvgs.length]}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap mb-1.5">
+                <h3 class="text-base font-bold text-gray-900">${esc(c.name)}</h3>
+                <span class="badge badge-${s}">
+                  <span class="badge-dot"></span>${statusLabel(s)}
+                </span>
+              </div>
+              ${c.description ? `<p class="text-gray-400 text-sm mb-2 line-clamp-1">${esc(c.description)}</p>` : ''}
+              <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-400">
+                <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${fmtDate(c.start_time)}</span>
+                <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${dur}</span>
+                ${c.require_login ? `<span class="flex items-center gap-1 text-emerald-600"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Bắt buộc đăng nhập</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            ${s === 'ended'
+              ? `<button onclick="viewContest('${c.id}')"
+                  class="px-4 py-2 border-2 border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors">
+                  Xem kết quả
+                </button>`
+              : canJoin
+                ? `<button onclick="openJoin('${c.id}','${esc(c.name)}', ${!!c.require_login})"
+                    class="join-btn px-5 py-2.5 text-sm">
+                    Tham gia →
+                  </button>`
+                : `<button disabled class="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed">
+                    Chưa bắt đầu
+                  </button>`
+            }
+          </div>
+        </div>
+      </div>
+      ${s === 'running' ? `<div class="h-0.5 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400"></div>` : ''}
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+async function openJoin(id, name, requireLogin) {
+  selectedContest = id;
+  selectedRequireLogin = requireLogin;
+
+  if (requireLogin) {
+    if (!currentUser) {
+      handleLogin();
+      return;
+    }
+    await submitJoin(true);
+    return;
+  }
+
+  document.getElementById('joinContestName').textContent = name;
+  document.getElementById('nicknameInput').value = '';
+  document.getElementById('organizationInput').value = '';
+  document.getElementById('joinError').classList.add('hidden');
+  document.getElementById('joinModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('nicknameInput').focus(), 150);
+}
+
+function closeJoin() {
+  document.getElementById('joinModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  selectedContest = null;
+}
+
+function handleOverlayClick(e) {
+  if (e.target.id === 'joinModal') closeJoin();
+}
+
+async function submitJoin(isAutoJoin = false) {
+  let nickname = '';
+  let organization = '';
+  let headers = { 'Content-Type': 'application/json' };
+
+  if (!isAutoJoin) {
+    nickname = document.getElementById('nicknameInput').value.trim();
+    organization = document.getElementById('organizationInput').value.trim();
+    if (nickname.length < 2) { showJoinError('Biệt danh phải có ít nhất 2 ký tự'); return; }
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true; btn.textContent = 'Đang xử lý...';
+  } else {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  }
+
+  const res = await fetch('/api/auth/join', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ contestId: selectedContest, nickname, organization })
+  });
+  const data = await res.json();
+
+  if (!isAutoJoin) {
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = false; btn.textContent = 'Vào thi ngay →';
+  }
+
+  if (!res.ok) { 
+    if (!isAutoJoin) showJoinError(data.error || 'Có lỗi xảy ra'); 
+    else alert('Lỗi tham gia kỳ thi: ' + (data.error || 'Có lỗi xảy ra'));
+    return; 
+  }
+
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('participantId', data.participantId);
+  localStorage.setItem('nickname', data.nickname);
+  localStorage.setItem('organization', data.organization || '');
+  localStorage.setItem('contestId', selectedContest);
+
+  window.location.href = `/contest?id=${selectedContest}`;
+}
+
+function showJoinError(msg) {
+  document.getElementById('joinErrorText').textContent = msg;
+  document.getElementById('joinError').classList.remove('hidden');
+}
+
+function viewContest(id) { window.location.href = `/contest?id=${id}`; }
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeJoin(); });
+document.getElementById('nicknameInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitJoin(); });
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('contestSidebar');
+  const content = document.getElementById('pageContent');
+  sidebar.classList.toggle('collapsed');
+  content.classList.toggle('sidebar-expanded');
+}
+
+// Decimal number background pattern
+(function() {
+  const el = document.getElementById('numBg');
+  if (!el) return;
+  const nums = [3.14159,2.71828,1.41421,0.57721,1.61803,4.66920,0.36787,1.73205,2.99792,1.05457,0.69314,2.30258,1.44269,9.80665,6.02214];
+  let t = '';
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 15; c++) t += nums[(r * 4 + c * 3) % nums.length].toFixed(5) + '  ';
+    t += '\n';
+  }
+  el.textContent = t;
+})();
+(async function() {
+  await initSupabase();
+  loadContests();
+})();
+</script>
+
+</div><!-- end #pageContent -->
+</body>
+</html>

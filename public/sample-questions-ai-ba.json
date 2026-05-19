@@ -1,0 +1,347 @@
+[
+  {
+    "title": "Vai trò của AI trong Business Analysis",
+    "description": "Trong lĩnh vực Business Analysis, AI thường được ứng dụng để làm gì?",
+    "question_type": "single",
+    "choices": [
+      "Tự động hoá hoàn toàn vai trò của BA",
+      "Hỗ trợ BA phân tích dữ liệu, tự động hoá tác vụ lặp lại và trợ lý ra quyết định",
+      "Thay thế toàn bộ quá trình thu thập yêu cầu",
+      "Chỉ dùng để viết mã nguồn"
+    ],
+    "correct_index": 1,
+    "correct_answer": null,
+    "explanation": "AI đóng vai trò hỗ trợ (augmentation) cho BA, giúp tăng hiệu suất chứ không thay thế hoàn toàn con người trong các quyết định phức tạp.",
+    "tags": ["AI", "Business Analysis", "cơ bản"],
+    "difficulty": 1
+  },
+  {
+    "title": "Ứng dụng ChatGPT trong tác vụ BA",
+    "description": "Một BA có thể sử dụng ChatGPT hiệu quả nhất trong tác vụ nào sau đây?",
+    "question_type": "single",
+    "choices": [
+      "Ký hợp đồng với khách hàng",
+      "Phê duyệt ngân sách dự án",
+      "Soạn thảo nhanh User Stories từ ghi chú họp",
+      "Triển khai hệ thống lên môi trường production"
+    ],
+    "correct_index": 2,
+    "correct_answer": null,
+    "explanation": "ChatGPT (Large Language Model) xuất sắc trong việc tạo sinh văn bản có cấu trúc như User Stories từ nội dung phi cấu trúc.",
+    "tags": ["ChatGPT", "User Stories", "Generative AI"],
+    "difficulty": 1
+  },
+  {
+    "title": "Công cụ Process Mining điển hình",
+    "description": "Công cụ nào dưới đây là đại diện tiêu biểu của lĩnh vực Process Mining?",
+    "question_type": "single",
+    "choices": [
+      "Trello",
+      "Celonis",
+      "Figma",
+      "Postman"
+    ],
+    "correct_index": 1,
+    "correct_answer": null,
+    "explanation": "Celonis là nền tảng Process Mining hàng đầu, giúp phân tích event log để tái tạo và tối ưu quy trình nghiệp vụ thực tế.",
+    "tags": ["Process Mining", "Celonis", "công cụ"],
+    "difficulty": 2
+  },
+  {
+    "title": "Sentiment Analysis trong phân tích phản hồi",
+    "description": "Một BA sử dụng Sentiment Analysis (Phân tích Cảm xúc) trên các đánh giá của khách hàng chủ yếu để làm gì?",
+    "question_type": "single",
+    "choices": [
+      "Dự đoán doanh thu quý tới",
+      "Phát hiện lỗi phần mềm",
+      "Hiểu cảm nhận và phản hồi của người dùng để cải thiện sản phẩm",
+      "Tối ưu hoá cơ sở hạ tầng hệ thống"
+    ],
+    "correct_index": 2,
+    "correct_answer": null,
+    "explanation": "Sentiment Analysis phân loại cảm xúc trong văn bản (tích cực/tiêu cực/trung lập), giúp BA hiểu được trải nghiệm thực tế của người dùng.",
+    "tags": ["Sentiment Analysis", "NLP", "phản hồi người dùng"],
+    "difficulty": 2
+  },
+  {
+    "title": "NLP trong thu thập yêu cầu",
+    "description": "Kỹ thuật Xử lý Ngôn ngữ Tự nhiên (NLP) hỗ trợ BA trong bước thu thập yêu cầu theo cách nào?",
+    "question_type": "single",
+    "choices": [
+      "Tự động viết code từ yêu cầu văn bản",
+      "Trích xuất và phân loại yêu cầu từ văn bản phi cấu trúc như email, biên bản họp",
+      "Thiết kế giao diện người dùng tự động",
+      "Quản lý tiến độ dự án theo thời gian thực"
+    ],
+    "correct_index": 1,
+    "correct_answer": null,
+    "explanation": "NLP cho phép máy tính hiểu và xử lý ngôn ngữ tự nhiên, giúp tự động hóa việc trích xuất yêu cầu từ tài liệu phi cấu trúc — một trong những tác vụ tốn thời gian nhất của BA.",
+    "tags": ["NLP", "requirements elicitation", "văn bản phi cấu trúc"],
+    "difficulty": 3
+  },
+  {
+    "title": "AI trong Gap Analysis",
+    "description": "Trong Gap Analysis (Phân tích Khoảng cách), AI có thể được sử dụng hiệu quả nhất ở bước nào?",
+    "question_type": "single",
+    "choices": [
+      "Trình bày kết quả cho cổ đông",
+      "Ký kết hợp đồng với nhà cung cấp",
+      "So sánh tự động trạng thái hiện tại với trạng thái mục tiêu dựa trên dữ liệu lịch sử",
+      "Phân bổ ngân sách dự án theo phòng ban"
+    ],
+    "correct_index": 2,
+    "correct_answer": null,
+    "explanation": "AI có thể tự động phân tích lượng lớn dữ liệu để xác định và định lượng khoảng cách giữa trạng thái hiện tại và mục tiêu, giúp BA ưu tiên các sáng kiến cải tiến.",
+    "tags": ["Gap Analysis", "AI", "phân tích"],
+    "difficulty": 3
+  },
+  {
+    "title": "Explainable AI (XAI) là gì?",
+    "description": "Một BA yêu cầu mô hình AI phải có khả năng giải thích lý do đưa ra mỗi quyết định để stakeholders có thể kiểm chứng. Khái niệm này gọi là gì?",
+    "question_type": "single",
+    "choices": [
+      "Automated Machine Learning (AutoML)",
+      "Federated Learning",
+      "Explainable AI (XAI)",
+      "Transfer Learning"
+    ],
+    "correct_index": 2,
+    "correct_answer": null,
+    "explanation": "XAI (Explainable AI) là tập hợp các kỹ thuật giúp làm rõ lý do mô hình AI đưa ra kết quả cụ thể, đặc biệt quan trọng trong các quyết định ảnh hưởng đến con người.",
+    "tags": ["XAI", "Explainable AI", "minh bạch"],
+    "difficulty": 4
+  },
+  {
+    "title": "Hệ quả của dữ liệu huấn luyện thiên vị",
+    "description": "Khi mô hình AI được huấn luyện trên dữ liệu lịch sử thiên vị (biased training data), hệ quả nào sau đây có thể xảy ra trong phân tích nghiệp vụ?",
+    "question_type": "single",
+    "choices": [
+      "Mô hình sẽ tự động điều chỉnh và cải thiện độ chính xác theo thời gian",
+      "Kết quả phân tích sẽ phản ánh và khuếch đại sự thiên vị, dẫn đến quyết định sai lệch",
+      "Hệ thống sẽ từ chối xử lý dữ liệu đầu vào mới",
+      "Chi phí vận hành mô hình sẽ tăng đáng kể"
+    ],
+    "correct_index": 1,
+    "correct_answer": null,
+    "explanation": "Nguyên tắc 'Garbage In, Garbage Out' áp dụng với AI: dữ liệu thiên vị tạo ra mô hình thiên vị, khuếch đại bất bình đẳng trong các quyết định nghiệp vụ.",
+    "tags": ["bias", "dữ liệu thiên vị", "đạo đức AI"],
+    "difficulty": 4
+  },
+  {
+    "title": "GDPR và quyền giải thích trong AI",
+    "description": "Khi triển khai hệ thống AI để phân tích hành vi khách hàng tại châu Âu, BA cần lưu ý điều gì quan trọng nhất theo GDPR?",
+    "question_type": "single",
+    "choices": [
+      "Mô hình AI phải đạt độ chính xác tối thiểu 95%",
+      "Phải xin phép Ủy ban Châu Âu trước khi triển khai bất kỳ AI nào",
+      "Người dùng có quyền được giải thích về quyết định tự động và có thể yêu cầu xem xét lại bởi con người",
+      "Hệ thống AI phải được xây dựng bằng ngôn ngữ lập trình được EU chứng nhận"
+    ],
+    "correct_index": 2,
+    "correct_answer": null,
+    "explanation": "GDPR Điều 22 quy định 'right to explanation' — người dùng có quyền không bị ảnh hưởng hoàn toàn bởi quyết định tự động và có quyền yêu cầu can thiệp của con người.",
+    "tags": ["GDPR", "luật AI", "quyền người dùng", "châu Âu"],
+    "difficulty": 5
+  },
+  {
+    "title": "Model Drift trong hệ thống AI vận hành",
+    "description": "Sau 6 tháng vận hành, mô hình AI dự báo nhu cầu khách hàng bắt đầu cho kết quả kém chính xác hơn dù code không thay đổi. Đây là hiện tượng gì và BA cần làm gì?",
+    "question_type": "single",
+    "choices": [
+      "Lỗi phần cứng máy chủ; cần nâng cấp hạ tầng",
+      "Data Drift / Model Drift; cần tái huấn luyện mô hình với dữ liệu mới và thiết lập vòng phản hồi liên tục",
+      "Vấn đề bảo mật; cần đổi mật khẩu database",
+      "Lỗi logic nghiệp vụ; cần refactor code"
+    ],
+    "correct_index": 1,
+    "correct_answer": null,
+    "explanation": "Model Drift xảy ra khi phân phối dữ liệu thực tế thay đổi so với dữ liệu huấn luyện. BA cần xây dựng kế hoạch tái huấn luyện định kỳ (MLOps) như một phần của chiến lược AI.",
+    "tags": ["Model Drift", "MLOps", "giám sát AI"],
+    "difficulty": 5
+  },
+  {
+    "title": "Ứng dụng AI hỗ trợ công việc BA hàng ngày",
+    "description": "Những ứng dụng nào của AI dưới đây có thể trực tiếp hỗ trợ công việc của một Business Analyst? (Chọn tất cả đáp án đúng)",
+    "question_type": "multiple",
+    "choices": [
+      "Tự động tóm tắt biên bản họp (meeting minutes)",
+      "Đề xuất test case từ tài liệu yêu cầu",
+      "Quản lý lương và phúc lợi nhân viên",
+      "Phân loại và ưu tiên backlog tự động",
+      "Phân tích cảm xúc trong phản hồi người dùng"
+    ],
+    "correct_index": null,
+    "correct_answer": [0, 1, 3, 4],
+    "explanation": "AI hỗ trợ BA trong: tóm tắt nội dung họp, tạo test case, quản lý backlog thông minh, và hiểu phản hồi người dùng. Quản lý lương là chức năng HR, không liên quan.",
+    "tags": ["AI tools", "BA workflow", "productivity"],
+    "difficulty": 2
+  },
+  {
+    "title": "Lợi ích của Process Mining trong phân tích quy trình",
+    "description": "Process Mining mang lại những lợi ích nào sau đây cho BA khi phân tích quy trình nghiệp vụ? (Chọn tất cả đáp án đúng)",
+    "question_type": "multiple",
+    "choices": [
+      "Phát hiện bottleneck (điểm nghẽn cổ chai) trong quy trình",
+      "Thay thế hoàn toàn sự cần thiết của BA trong dự án",
+      "Xác định sai lệch giữa quy trình thực tế và quy trình đã thiết kế",
+      "Cung cấp bằng chứng khách quan dựa trên event log từ hệ thống",
+      "Lập trình tự động toàn bộ hệ thống mới thay cho đội phát triển"
+    ],
+    "correct_index": null,
+    "correct_answer": [0, 2, 3],
+    "explanation": "Process Mining cung cấp cái nhìn khách quan về quy trình thực tế dựa trên dữ liệu event log, phát hiện bottleneck và sai lệch. Nó không thay thế con người hay tự lập trình hệ thống.",
+    "tags": ["Process Mining", "quy trình", "bottleneck"],
+    "difficulty": 3
+  },
+  {
+    "title": "Thách thức triển khai AI trong phân tích nghiệp vụ",
+    "description": "Những thách thức nào sau đây thường gặp khi áp dụng AI vào hoạt động phân tích nghiệp vụ? (Chọn tất cả đúng)",
+    "question_type": "multiple",
+    "choices": [
+      "Dữ liệu huấn luyện chất lượng thấp hoặc không đầy đủ",
+      "AI luôn cho kết quả chính xác 100% nên không cần kiểm tra",
+      "Kháng cự thay đổi từ các bên liên quan (stakeholders)",
+      "Khó giải thích kết quả mô hình 'hộp đen' cho stakeholders phi kỹ thuật",
+      "Chi phí triển khai và duy trì mô hình AI cao"
+    ],
+    "correct_index": null,
+    "correct_answer": [0, 2, 3, 4],
+    "explanation": "AI không phải lúc nào cũng chính xác và luôn cần kiểm tra. Bốn thách thức thực tế bao gồm: chất lượng dữ liệu, quản lý thay đổi, tính minh bạch và chi phí.",
+    "tags": ["thách thức", "triển khai AI", "quản lý thay đổi"],
+    "difficulty": 4
+  },
+  {
+    "title": "Nguyên tắc đạo đức AI theo khung EU",
+    "description": "Theo EU AI Act và Ethics Guidelines, những nguyên tắc nào phải được đảm bảo khi triển khai hệ thống AI hỗ trợ ra quyết định trong nghiệp vụ? (Chọn tất cả đúng)",
+    "question_type": "multiple",
+    "choices": [
+      "Tính minh bạch và khả năng giải thích (Transparency & Explainability)",
+      "Tối đa hoá lợi nhuận bằng mọi phương tiện có thể",
+      "Công bằng và không phân biệt đối xử (Fairness & Non-discrimination)",
+      "Quyền kiểm soát và giám sát của con người (Human Oversight)",
+      "Bảo mật dữ liệu và quyền riêng tư (Privacy & Data Governance)"
+    ],
+    "correct_index": null,
+    "correct_answer": [0, 2, 3, 4],
+    "explanation": "EU AI Act đặt ra 4 nguyên tắc cốt lõi: minh bạch, công bằng, kiểm soát của con người, và bảo vệ quyền riêng tư. Tối đa hoá lợi nhuận không phải nguyên tắc đạo đức.",
+    "tags": ["EU AI Act", "đạo đức AI", "quy định"],
+    "difficulty": 5
+  },
+  {
+    "title": "Ghép thuật ngữ AI với định nghĩa",
+    "description": "Hãy ghép mỗi thuật ngữ AI (cột A) với định nghĩa tương ứng (cột B).",
+    "question_type": "matching",
+    "choices": [
+      "NLP (Xử lý ngôn ngữ tự nhiên)",
+      "Process Mining",
+      "Sentiment Analysis",
+      "Chatbot"
+    ],
+    "correct_index": null,
+    "correct_answer": [
+      "Kỹ thuật giúp máy tính hiểu và xử lý ngôn ngữ của con người",
+      "Phân tích event log để tái tạo và cải thiện quy trình thực tế",
+      "Phân loại cảm xúc (tích cực/tiêu cực/trung lập) trong văn bản",
+      "Phần mềm mô phỏng hội thoại với người dùng qua văn bản hoặc giọng nói"
+    ],
+    "explanation": "Đây là 4 công nghệ AI phổ biến nhất trong Business Analysis. Hiểu rõ định nghĩa giúp BA chọn đúng công cụ cho từng tình huống.",
+    "tags": ["thuật ngữ AI", "NLP", "Process Mining", "Chatbot"],
+    "difficulty": 2
+  },
+  {
+    "title": "Ghép hoạt động BA với ứng dụng AI hỗ trợ",
+    "description": "Hãy ghép mỗi hoạt động phân tích nghiệp vụ (cột A) với ứng dụng AI hỗ trợ phù hợp nhất (cột B).",
+    "question_type": "matching",
+    "choices": [
+      "Phân tích phản hồi người dùng sau khi ra mắt sản phẩm",
+      "Xác định quy trình nghiệp vụ thực tế từ dữ liệu hệ thống ERP",
+      "Tạo tài liệu yêu cầu từ ghi chú phỏng vấn phi cấu trúc",
+      "Dự báo xu hướng nhu cầu nghiệp vụ trong tương lai"
+    ],
+    "correct_index": null,
+    "correct_answer": [
+      "Sentiment Analysis (phân tích cảm xúc văn bản)",
+      "Process Mining (khai thác quy trình từ event log)",
+      "NLP & Generative AI (sinh và cấu trúc hoá văn bản)",
+      "Predictive Analytics (phân tích dự đoán từ dữ liệu lịch sử)"
+    ],
+    "explanation": "Mỗi ứng dụng AI có thế mạnh riêng: Sentiment Analysis cho văn bản cảm xúc, Process Mining cho quy trình, Generative AI cho tạo tài liệu, Predictive Analytics cho dự báo.",
+    "tags": ["ứng dụng AI", "hoạt động BA", "công cụ phù hợp"],
+    "difficulty": 3
+  },
+  {
+    "title": "Ghép loại mô hình AI với tình huống BA",
+    "description": "Hãy ghép loại mô hình/kỹ thuật AI (cột A) với tình huống ứng dụng phù hợp trong Business Analysis (cột B).",
+    "question_type": "matching",
+    "choices": [
+      "Random Forest / Decision Tree",
+      "Large Language Model (LLM)",
+      "K-Means Clustering",
+      "LSTM / Time Series Model"
+    ],
+    "correct_index": null,
+    "correct_answer": [
+      "Phân loại và ưu tiên yêu cầu theo mức độ quan trọng và rủi ro",
+      "Tóm tắt tài liệu dài và sinh User Stories từ đặc tả nghiệp vụ",
+      "Phân nhóm khách hàng để xác định các luồng nghiệp vụ khác nhau",
+      "Dự báo khối lượng giao dịch để lập kế hoạch năng lực hệ thống"
+    ],
+    "explanation": "Mỗi loại mô hình phù hợp với bài toán khác nhau: Decision Tree cho phân loại có giải thích được, LLM cho ngôn ngữ, Clustering cho phân nhóm, LSTM cho chuỗi thời gian.",
+    "tags": ["mô hình AI", "machine learning", "ứng dụng BA"],
+    "difficulty": 4
+  },
+  {
+    "title": "Thứ tự triển khai chatbot hỗ trợ nghiệp vụ",
+    "description": "Sắp xếp các bước sau theo đúng thứ tự khi triển khai một chatbot hỗ trợ nghiệp vụ nội bộ cho doanh nghiệp.",
+    "question_type": "ordering",
+    "choices": [
+      "Xác định mục tiêu nghiệp vụ và phạm vi chatbot",
+      "Thu thập và phân tích các câu hỏi / tình huống thường gặp",
+      "Thiết kế luồng hội thoại (conversation flow)",
+      "Xây dựng và huấn luyện mô hình AI",
+      "Kiểm thử với người dùng thực tế và thu thập phản hồi",
+      "Triển khai chính thức và theo dõi hiệu suất liên tục"
+    ],
+    "correct_index": null,
+    "correct_answer": null,
+    "explanation": "Thứ tự đúng theo vòng đời phát triển sản phẩm AI: Mục tiêu → Thu thập dữ liệu → Thiết kế → Xây dựng → Kiểm thử → Triển khai & Giám sát.",
+    "tags": ["chatbot", "triển khai AI", "quy trình dự án"],
+    "difficulty": 2
+  },
+  {
+    "title": "Vòng đời phát triển giải pháp Machine Learning",
+    "description": "Sắp xếp các giai đoạn trong vòng đời phát triển một giải pháp Machine Learning cho dự án nghiệp vụ theo đúng thứ tự.",
+    "question_type": "ordering",
+    "choices": [
+      "Xác định bài toán nghiệp vụ và đặt ra mục tiêu đo lường (KPI)",
+      "Thu thập, làm sạch và khám phá dữ liệu (Exploratory Data Analysis)",
+      "Lựa chọn thuật toán và xây dựng mô hình",
+      "Đánh giá mô hình với dữ liệu kiểm thử và điều chỉnh",
+      "Triển khai mô hình vào môi trường production",
+      "Giám sát, đánh giá hiệu suất và tái huấn luyện định kỳ (MLOps)"
+    ],
+    "correct_index": null,
+    "correct_answer": null,
+    "explanation": "Vòng đời ML bắt đầu từ bài toán nghiệp vụ (không phải từ công nghệ), tiến qua dữ liệu, mô hình, đánh giá, triển khai và kết thúc với vòng lặp cải tiến liên tục.",
+    "tags": ["ML lifecycle", "MLOps", "quy trình AI"],
+    "difficulty": 3
+  },
+  {
+    "title": "Quy trình phân tích với Process Mining",
+    "description": "Sắp xếp đúng thứ tự các bước thực hiện phân tích quy trình (process analysis) sử dụng kỹ thuật Process Mining.",
+    "question_type": "ordering",
+    "choices": [
+      "Xác định phạm vi quy trình cần phân tích và câu hỏi nghiệp vụ",
+      "Trích xuất và chuẩn bị Event Log từ hệ thống thông tin (ERP, CRM...)",
+      "Khám phá quy trình thực tế (Process Discovery) bằng thuật toán mining",
+      "Đối chiếu quy trình thực tế với mô hình tham chiếu (Conformance Checking)",
+      "Phân tích nguyên nhân gốc rễ của các sai lệch và bottleneck",
+      "Đề xuất cải tiến quy trình và theo dõi sau khi triển khai"
+    ],
+    "correct_index": null,
+    "correct_answer": null,
+    "explanation": "Process Mining đi theo luồng: Câu hỏi nghiệp vụ → Dữ liệu Event Log → Khám phá quy trình → Kiểm tra tuân thủ → Phân tích nguyên nhân → Cải tiến & Theo dõi.",
+    "tags": ["Process Mining", "phân tích quy trình", "Event Log"],
+    "difficulty": 4
+  }
+]

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bài tập - ACM-ICPC</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+body { font-family: 'Segoe UI', system-ui, sans-serif; }
+.split { display: flex; height: calc(100vh - 112px); }
+.pane-left { width: 45%; overflow-y: auto; border-right: 1px solid #e5e7eb; }
+.pane-right { width: 55%; display: flex; flex-direction: column; }
+#editor-container { flex: 1; min-height: 0; }
+.verdict-ac { background:#dcfce7; border-color:#86efac; color:#15803d; }
+.verdict-wa { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
+.verdict-tle { background:#ffedd5; border-color:#fdba74; color:#c2410c; }
+.verdict-re { background:#fce7f3; border-color:#f9a8d4; color:#be185d; }
+.verdict-ce { background:#fef9c3; border-color:#fde047; color:#854d0e; }
+.verdict-pending { background:#dbeafe; border-color:#93c5fd; color:#1d4ed8; }
+pre code.hljs { font-size: 13px; border-radius: 8px; }
+.statement-section { margin-bottom: 1.25rem; }
+.statement-section h4 { font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.95rem; }
+</style>
+</head>
+<body class="bg-gray-50 overflow-hidden">
+
+<!-- Header -->
+<header class="bg-blue-700 text-white px-4 py-2.5 flex items-center justify-between shadow">
+  <div class="flex items-center gap-3">
+    <a id="backLink" href="/" class="text-blue-200 hover:text-white text-sm">← Quay lại</a>
+    <span class="text-blue-400">|</span>
+    <h1 id="problemTitle" class="text-base font-semibold">Đang tải...</h1>
+  </div>
+  <div id="timerBox" class="font-mono text-sm text-yellow-300 font-bold"></div>
+</header>
+
+<!-- Verdict bar -->
+<div id="verdictBar" class="hidden mx-4 mt-3 rounded-xl border px-5 py-3 flex items-center justify-between" style="position:relative;z-index:10">
+  <div>
+    <div id="verdictText" class="font-bold text-lg"></div>
+    <div id="verdictSub" class="text-sm mt-0.5"></div>
+  </div>
+  <button onclick="document.getElementById('verdictBar').classList.add('hidden')" class="text-current opacity-60 hover:opacity-100 text-xl">✕</button>
+</div>
+
+<!-- Split layout -->
+<div class="split">
+
+  <!-- Left: Problem statement -->
+  <div class="pane-left bg-white p-6">
+    <div id="problemStatement">
+      <div class="text-gray-400 text-center py-16">Đang tải bài tập...</div>
+    </div>
+  </div>
+
+  <!-- Right: Editor + Submit -->
+  <div class="pane-right">
+    <!-- Toolbar -->
+    <div class="flex items-center gap-3 px-4 py-2 border-b bg-gray-50">
+      <select id="langSelect" onchange="changeLanguage()" class="text-sm border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <option value="cpp">C++ (g++17)</option>
+        <option value="python">Python 3</option>
+        <option value="javascript">JavaScript (Node.js)</option>
+        <option value="java">Java</option>
+      </select>
+      <button onclick="resetCode()" class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded hover:bg-gray-100">↺ Reset</button>
+      <div class="flex-1"></div>
+      <button id="submitBtn" onclick="submitCode()"
+        class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors">
+        Nộp bài ▶
+      </button>
+    </div>
+
+    <!-- Monaco Editor -->
+    <div id="editor-container"></div>
+
+    <!-- Submission history (bottom panel) -->
+    <div class="border-t bg-white max-h-36 overflow-y-auto">
+      <div class="px-4 py-2 flex items-center gap-2">
+        <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Bài nộp gần đây</span>
+        <button onclick="loadMySubmissions()" class="text-xs text-blue-500 hover:text-blue-700">↻</button>
+      </div>
+      <div id="historyList" class="px-4 pb-2 space-y-1">
+        <p class="text-xs text-gray-400">Chưa có bài nộp.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monaco Editor via CDN -->
+<script>
+const LANG_TEMPLATES = {
+  cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    // TODO: write your solution here
+
+    return 0;
+}`,
+  python: `import sys
+input = sys.stdin.readline
+
+def main():
+    # TODO: write your solution here
+    pass
+
+main()`,
+  javascript: `const readline = require('readline');
+const rl = readline.createInterface({ input: process.stdin });
+const lines = [];
+rl.on('line', l => lines.push(l));
+rl.on('close', () => {
+    // TODO: write your solution here
+});`,
+  java: `import java.util.*;
+import java.io.*;
+
+public class Solution {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        // TODO: write your solution here
+    }
+}`
+};
+
+const params = new URLSearchParams(location.search);
+const CONTEST_ID = params.get('contest');
+const PROBLEM_ID = params.get('problem');
+const token = localStorage.getItem('token');
+
+let editor = null;
+let problemData = null;
+let contestData = null;
+let pollingInterval = null;
+
+// Load Monaco
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js';
+script.onload = () => {
+  require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+  require(['vs/editor/editor.main'], () => {
+    const lang = localStorage.getItem('preferredLang') || 'cpp';
+    document.getElementById('langSelect').value = lang;
+    editor = monaco.editor.create(document.getElementById('editor-container'), {
+      value: getSavedCode(lang) || LANG_TEMPLATES[lang],
+      language: monacoLang(lang),
+      theme: 'vs-dark',
+      automaticLayout: true,
+      minimap: { enabled: false },
+      fontSize: 14,
+      lineNumbers: 'on',
+      scrollBeyondLastLine: false,
+      tabSize: 4
+    });
+    editor.onDidChangeModelContent(() => saveCode());
+    init();
+  });
+};
+document.head.appendChild(script);
+
+async function init() {
+  if (!CONTEST_ID || !PROBLEM_ID) { location.href = '/'; return; }
+  document.getElementById('backLink').href = `/contest?id=${CONTEST_ID}`;
+
+  const [problemRes, contestRes] = await Promise.all([
+    fetch(`/api/problems/${PROBLEM_ID}`),
+    fetch(`/api/contests/${CONTEST_ID}`)
+  ]);
+
+  problemData = await problemRes.json();
+  contestData = await contestRes.json();
+
+  document.title = `Bài ${problemData.label}: ${problemData.title} - ACM-ICPC`;
+  document.getElementById('problemTitle').textContent = `Bài ${problemData.label}: ${problemData.title}`;
+
+  renderStatement();
+  startTimer();
+  loadMySubmissions();
+}
+
+function renderStatement() {
+  const p = problemData;
+  const el = document.getElementById('problemStatement');
+  el.innerHTML = `
+    <div class="flex items-center gap-3 mb-5">
+      <span class="text-3xl font-bold text-blue-600">${esc(p.label)}</span>
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">${esc(p.title)}</h2>
+        <div class="flex gap-4 text-sm text-gray-500 mt-0.5">
+          <span>⏱ Giới hạn: ${p.time_limit}ms</span>
+          <span>💾 Bộ nhớ: ${p.memory_limit}MB</span>
+        </div>
+      </div>
+    </div>
+    <hr class="mb-5 border-gray-200"/>
+
+    <div class="statement-section">
+      <h4>Đề bài</h4>
+      <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">${esc(p.description)}</div>
+    </div>
+
+    ${p.input_description ? `<div class="statement-section">
+      <h4>Đầu vào</h4>
+      <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">${esc(p.input_description)}</div>
+    </div>` : ''}
+
+    ${p.output_description ? `<div class="statement-section">
+      <h4>Đầu ra</h4>
+      <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">${esc(p.output_description)}</div>
+    </div>` : ''}
+
+    ${p.constraints ? `<div class="statement-section">
+      <h4>Ràng buộc</h4>
+      <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">${esc(p.constraints)}</div>
+    </div>` : ''}
+
+    ${(p.samples || []).length ? `<div class="statement-section">
+      <h4>Ví dụ</h4>
+      ${p.samples.map((s, i) => `
+        <div class="mb-4">
+          <p class="text-xs text-gray-500 font-medium mb-1">Ví dụ ${i + 1}</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <p class="text-xs text-gray-400 mb-1">Input</p>
+              <pre class="bg-gray-900 text-gray-100 rounded-lg p-3 text-xs overflow-x-auto">${esc(s.input)}</pre>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-1">Output</p>
+              <pre class="bg-gray-900 text-gray-100 rounded-lg p-3 text-xs overflow-x-auto">${esc(s.expected_output)}</pre>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>` : ''}`;
+}
+
+async function submitCode() {
+  if (!token) {
+    alert('Bạn chưa tham gia kỳ thi. Vui lòng quay lại và nhập nickname.');
+    return;
+  }
+
+  const code = editor.getValue();
+  const language = document.getElementById('langSelect').value;
+
+  if (!code.trim()) { alert('Vui lòng viết code trước khi nộp.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Đang nộp...';
+  showVerdict('pending', 'Đang chấm bài...', '');
+
+  const res = await fetch('/api/submissions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ problemId: PROBLEM_ID, language, code })
+  });
+
+  const data = await res.json();
+  btn.disabled = false;
+  btn.textContent = 'Nộp bài ▶';
+
+  if (!res.ok) {
+    showVerdict('error', 'Lỗi nộp bài', data.error);
+    return;
+  }
+
+  // Poll for result
+  pollSubmission(data.id);
+  loadMySubmissions();
+}
+
+function pollSubmission(submissionId) {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(async () => {
+    const res = await fetch(`/api/submissions/${submissionId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const sub = await res.json();
+
+    if (sub.status !== 'pending' && sub.status !== 'judging') {
+      clearInterval(pollingInterval);
+      loadMySubmissions();
+      renderVerdict(sub);
+    } else {
+      showVerdict('pending', sub.status === 'judging' ? 'Đang chấm bài...' : 'Đang chờ...', '');
+    }
+  }, 1000);
+}
+
+function renderVerdict(sub) {
+  const verdicts = {
+    accepted:            ['ac', '✓ Accepted', ''],
+    wrong_answer:        ['wa', '✗ Wrong Answer', 'Kết quả không đúng'],
+    time_limit_exceeded: ['tle', '⏱ Time Limit Exceeded', 'Vượt quá thời gian cho phép'],
+    runtime_error:       ['re', '⚡ Runtime Error', sub.error_message || ''],
+    compilation_error:   ['ce', '🔧 Compilation Error', sub.error_message || '']
+  };
+  const [type, title, sub_] = verdicts[sub.status] || ['pending', sub.status, ''];
+  const timeTxt = sub.time_used ? ` · ${sub.time_used}ms` : '';
+  showVerdict(type, title, sub_ + timeTxt);
+}
+
+function showVerdict(type, title, subtitle) {
+  const bar = document.getElementById('verdictBar');
+  bar.className = 'mx-4 mt-3 rounded-xl border px-5 py-3 flex items-center justify-between';
+  const cls = { ac:'verdict-ac', wa:'verdict-wa', tle:'verdict-tle', re:'verdict-re', ce:'verdict-ce', error:'verdict-wa', pending:'verdict-pending' };
+  bar.classList.add(...(cls[type]||'verdict-pending').split(' '));
+  bar.classList.remove('hidden');
+  document.getElementById('verdictText').textContent = title;
+  document.getElementById('verdictSub').textContent = subtitle;
+}
+
+async function loadMySubmissions() {
+  if (!token) return;
+  const res = await fetch(`/api/submissions/problem/${PROBLEM_ID}`, { headers: { 'Authorization': `Bearer ${token}` } });
+  const subs = await res.json();
+
+  const el = document.getElementById('historyList');
+  if (!subs.length) {
+    el.innerHTML = '<p class="text-xs text-gray-400">Chưa có bài nộp nào.</p>';
+    return;
+  }
+
+  const verdictMap = {
+    accepted:'text-green-600', wrong_answer:'text-red-500', time_limit_exceeded:'text-orange-500',
+    runtime_error:'text-red-500', compilation_error:'text-yellow-600', judging:'text-blue-500', pending:'text-gray-400'
+  };
+  const verdictText = {
+    accepted:'AC', wrong_answer:'WA', time_limit_exceeded:'TLE',
+    runtime_error:'RE', compilation_error:'CE', judging:'Judging...', pending:'Pending'
+  };
+
+  el.innerHTML = subs.slice(0, 10).map(s => `
+    <div class="flex items-center gap-3 text-xs py-1">
+      <span class="font-mono ${verdictMap[s.status]||'text-gray-500'} font-bold w-16">${verdictText[s.status]||s.status}</span>
+      <span class="text-gray-500">${s.language.toUpperCase()}</span>
+      <span class="text-gray-400">${new Date(s.submitted_at).toLocaleTimeString('vi-VN')}</span>
+      ${s.time_used ? `<span class="text-gray-400">${s.time_used}ms</span>` : ''}
+    </div>`).join('');
+}
+
+function changeLanguage() {
+  const lang = document.getElementById('langSelect').value;
+  localStorage.setItem('preferredLang', lang);
+  const saved = getSavedCode(lang);
+  if (editor) {
+    monaco.editor.setModelLanguage(editor.getModel(), monacoLang(lang));
+    editor.setValue(saved || LANG_TEMPLATES[lang]);
+  }
+}
+
+function resetCode() {
+  const lang = document.getElementById('langSelect').value;
+  if (confirm('Reset về template mặc định?') && editor) {
+    editor.setValue(LANG_TEMPLATES[lang]);
+    localStorage.removeItem(`code_${PROBLEM_ID}_${lang}`);
+  }
+}
+
+function saveCode() {
+  if (!editor) return;
+  const lang = document.getElementById('langSelect').value;
+  localStorage.setItem(`code_${PROBLEM_ID}_${lang}`, editor.getValue());
+}
+
+function getSavedCode(lang) {
+  return localStorage.getItem(`code_${PROBLEM_ID}_${lang}`);
+}
+
+function monacoLang(lang) {
+  return { cpp:'cpp', python:'python', javascript:'javascript', java:'java' }[lang] || 'plaintext';
+}
+
+function startTimer() {
+  function tick() {
+    if (!contestData) return;
+    const now = Date.now();
+    const end = new Date(contestData.end_time).getTime();
+    const el = document.getElementById('timerBox');
+    if (now > end) { el.textContent = 'Kết thúc'; return; }
+    const diff = end - now;
+    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+    el.textContent = `⏱ ${h>0?h+':':''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cổng cấp phát Tài khoản AI</title>
+<link rel="icon" type="image/png" href="/photo/images.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
+  
+  .glass-card {
+    background: white; border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+    border: 1px solid #e2e8f0;
+  }
+  .nice-input {
+    width: 100%; border: 2px solid #e2e8f0; border-radius: 12px;
+    padding: 12px 16px; font-size: 15px; outline: none; transition: all 0.2s;
+  }
+  .nice-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white; border: none; border-radius: 10px;
+    padding: 12px 24px; font-weight: 600; font-size: 15px;
+    cursor: pointer; transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3); width: 100%;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37,99,235,0.4); }
+  .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-md">
+  
+  <!-- Loading View -->
+  <div id="loadingView" class="text-center py-10 hidden">
+    <svg class="w-10 h-10 mx-auto text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    <p class="mt-4 text-gray-500 font-medium">Đang tải dữ liệu...</p>
+  </div>
+
+  <!-- Login View -->
+  <div id="loginView" class="glass-card p-8 text-center hidden">
+    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <h1 class="text-2xl font-bold mb-2">Cấp phát tài khoản AI</h1>
+    <p class="text-gray-500 text-sm mb-8">Vui lòng đăng nhập bằng tài khoản Google để thực hiện sát hạch và yêu cầu cấp tài khoản.</p>
+    
+    <button onclick="loginGoogle()" class="btn-primary flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-200 !shadow-sm hover:bg-gray-50" style="background:#fff; color:#333;">
+      <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Đăng nhập với Google
+    </button>
+  </div>
+
+  <!-- Profile Completion View -->
+  <div id="profileView" class="glass-card p-8 hidden">
+    <div class="mb-6">
+      <h2 class="text-xl font-bold mb-1">Hoàn thiện hồ sơ</h2>
+      <p class="text-gray-500 text-sm">Vui lòng cung cấp thêm thông tin để hoàn tất.</p>
+    </div>
+    
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Tên hiển thị <span class="text-red-500">*</span></label>
+    <input id="displayName" type="text" class="nice-input mb-4" placeholder="VD: Nguyễn Văn A" />
+    
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Đơn vị công tác</label>
+    <input id="orgName" type="text" class="nice-input mb-6" placeholder="VD: Phòng IT" />
+    
+    <button id="saveProfileBtn" onclick="saveProfile()" class="btn-primary">Lưu thông tin</button>
+  </div>
+
+  <!-- Dashboard View -->
+  <div id="dashboardView" class="glass-card p-8 hidden">
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+      <div>
+        <h2 class="text-lg font-bold" id="userGreeting">Xin chào!</h2>
+        <p class="text-sm text-gray-500" id="userOrg"></p>
+      </div>
+      <button onclick="logout()" class="text-red-500 text-sm font-medium hover:underline">Đăng xuất</button>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-6 text-center">
+      <p class="text-blue-800 text-sm font-medium mb-1">Điểm sát hạch AI hiện tại</p>
+      <div class="text-4xl font-black text-blue-600 mb-2" id="scoreDisplay">--</div>
+      <p class="text-sm text-blue-700">Đề xuất cấp hạng: <strong id="tierDisplay">--</strong></p>
+    </div>
+
+    <div id="requestStatus" class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 hidden">
+      <div class="flex items-center gap-3">
+        <div id="statusIcon" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"></div>
+        <div>
+          <p class="text-sm font-bold text-gray-800" id="statusTitle">Trạng thái yêu cầu</p>
+          <p class="text-xs text-gray-500 mt-0.5" id="statusDesc">Đang cập nhật...</p>
+        </div>
+      </div>
+    </div>
+
+    <button id="requestBtn" onclick="requestAccount()" class="btn-primary hidden">Yêu cầu cấp tài khoản</button>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  
+  let supabase, session = null, profile = null, scoreInfo = null;
+
+  async function init() {
+    showView('loadingView');
+    try {
+      const res = await fetch('/api/config');
+      const config = await res.json();
+      supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+      const { data } = await supabase.auth.getSession();
+      session = data.session;
+
+      // Xử lý OAuth redirect
+      supabase.auth.onAuthStateChange((event, s) => {
+        if (event === 'SIGNED_IN' && s) {
+          session = s;
+          checkAuth();
+        } else if (event === 'SIGNED_OUT') {
+          session = null;
+          showView('loginView');
+        }
+      });
+
+      checkAuth();
+    } catch (e) {
+      console.error(e);
+      alert('Không thể kết nối đến máy chủ.');
+    }
+  }
+
+  async function checkAuth() {
+    if (!session) {
+      showView('loginView');
+      return;
+    }
+
+    // Lấy token
+    const token = session.access_token;
+
+    // Check profile
+    const profileRes = await fetch('/api/ai/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+    profile = await profileRes.json();
+
+    if (!profile || !profile.display_name) {
+      // Nếu chưa có profile hoặc thiếu tên
+      document.getElementById('displayName').value = session.user.user_metadata?.full_name || '';
+      showView('profileView');
+      return;
+    }
+
+    // Load Dashboard
+    document.getElementById('userGreeting').textContent = `Xin chào, ${profile.display_name}`;
+    document.getElementById('userOrg').textContent = profile.organization || 'Chưa cập nhật đơn vị';
+
+    const [scoreRes, reqsRes] = await Promise.all([
+      fetch('/api/ai/score', { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch('/api/ai/requests', { headers: { 'Authorization': `Bearer ${token}` } })
+    ]);
+
+    scoreInfo = await scoreRes.json();
+    const reqs = await reqsRes.json();
+
+    const reqBtn = document.getElementById('requestBtn');
+    const statusBox = document.getElementById('requestStatus');
+
+    if (!scoreInfo.hasExam) {
+      document.getElementById('scoreDisplay').textContent = '--';
+      document.getElementById('tierDisplay').innerHTML = '<span class="text-gray-500">Chưa xác định</span>';
+      
+      statusBox.classList.remove('hidden');
+      reqBtn.classList.add('hidden');
+      document.getElementById('statusIcon').className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-600';
+      document.getElementById('statusIcon').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      document.getElementById('statusTitle').textContent = 'Chưa làm bài thi AI';
+      document.getElementById('statusDesc').innerHTML = 'Bạn cần <a href="/" class="text-blue-600 hover:underline">quay lại Trang chủ</a> và hoàn thành bài thi Đánh giá AI trước khi yêu cầu cấp tài khoản.';
+      
+      showView('dashboardView');
+      return;
+    }
+
+    document.getElementById('scoreDisplay').textContent = scoreInfo.score + '/100';
+    document.getElementById('tierDisplay').textContent = scoreInfo.recommendedTier;
+
+    const reqBtn = document.getElementById('requestBtn');
+    const statusBox = document.getElementById('requestStatus');
+
+    if (reqs && reqs.length > 0) {
+      const latest = reqs[0];
+      statusBox.classList.remove('hidden');
+      reqBtn.classList.add('hidden');
+      
+      const iconEl = document.getElementById('statusIcon');
+      const titleEl = document.getElementById('statusTitle');
+      const descEl = document.getElementById('statusDesc');
+
+      if (latest.status === 'pending') {
+        iconEl.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-amber-100 text-amber-600';
+        iconEl.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+        titleEl.textContent = 'Yêu cầu đang chờ duyệt';
+        descEl.textContent = `Hạng đề xuất: ${latest.recommended_tier}`;
+      } else if (latest.status === 'approved') {
+        iconEl.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-emerald-100 text-emerald-600';
+        iconEl.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+        titleEl.textContent = 'Đã được cấp phát';
+        descEl.textContent = `Hạng tài khoản: ${latest.allocated_tier || latest.recommended_tier}`;
+      } else {
+        iconEl.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100 text-red-600';
+        iconEl.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+        titleEl.textContent = 'Yêu cầu bị từ chối';
+        descEl.textContent = 'Vui lòng liên hệ IT để biết thêm chi tiết';
+        reqBtn.classList.remove('hidden'); // Allow retry
+      }
+    } else {
+      statusBox.classList.add('hidden');
+      reqBtn.classList.remove('hidden');
+    }
+
+    showView('dashboardView');
+  }
+
+  window.loginGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/ai-portal' }
+    });
+  };
+
+  window.logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  window.saveProfile = async () => {
+    const displayName = document.getElementById('displayName').value.trim();
+    const orgName = document.getElementById('orgName').value.trim();
+    
+    if (!displayName) { alert('Vui lòng nhập tên hiển thị.'); return; }
+    
+    const btn = document.getElementById('saveProfileBtn');
+    btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+    const res = await fetch('/api/ai/profile', {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ displayName, organization: orgName })
+    });
+
+    if (res.ok) {
+      checkAuth();
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Lỗi lưu thông tin');
+      btn.disabled = false; btn.textContent = 'Lưu thông tin';
+    }
+  };
+
+  window.requestAccount = async () => {
+    const btn = document.getElementById('requestBtn');
+    btn.disabled = true; btn.textContent = 'Đang gửi...';
+
+    const res = await fetch('/api/ai/request', {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ score: scoreInfo.score, recommendedTier: scoreInfo.recommendedTier })
+    });
+
+    if (res.ok) {
+      checkAuth();
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Có lỗi xảy ra');
+      btn.disabled = false; btn.textContent = 'Yêu cầu cấp tài khoản';
+    }
+  };
+
+  function showView(id) {
+    ['loadingView', 'loginView', 'profileView', 'dashboardView'].forEach(v => {
+      document.getElementById(v).classList.add('hidden');
+    });
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  init();
+</script>
+</body>
+</html>

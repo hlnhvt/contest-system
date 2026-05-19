@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ACM-ICPC Contest</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+* { box-sizing: border-box; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f0f4f8; }
+
+/* Animations */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+@keyframes slideRight { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes gradMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes cellFlash {
+  0%   { filter: brightness(1) saturate(1); transform: scale(1); }
+  30%  { filter: brightness(1.5) saturate(1.3); transform: scale(1.08); }
+  100% { filter: brightness(1) saturate(1); transform: scale(1); }
+}
+@keyframes rowHighlight {
+  0%   { background-color: inherit; }
+  40%  { background-color: rgba(250,240,140,0.6); }
+  100% { background-color: inherit; }
+}
+@keyframes modalIn {
+  from { opacity:0; transform:scale(0.93) translateY(16px); }
+  to   { opacity:1; transform:scale(1)    translateY(0); }
+}
+@keyframes correctBounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.06); }
+  60%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+@keyframes wrongShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-8px); }
+  40%     { transform: translateX(8px); }
+  60%     { transform: translateX(-5px); }
+  80%     { transform: translateX(5px); }
+}
+@keyframes timerPulse {
+  0%,100% { text-shadow: 0 0 0 transparent; }
+  50%     { text-shadow: 0 0 16px rgba(239,68,68,0.6); }
+}
+@keyframes confetti-fall {
+  0%   { transform: translateY(-10px) rotate(0deg); opacity:1; }
+  100% { transform: translateY(60px)  rotate(720deg); opacity:0; }
+}
+@keyframes gradientMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #052e16 0%, #064e3b 30%, #065f46 65%, #059669 100%);
+  background-size: 300% 300%;
+  animation: gradientMove 10s ease infinite;
+}
+.num-bg {
+  position: absolute; inset: 0;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 11px; color: rgba(255,255,255,0.055);
+  white-space: pre; overflow: hidden; pointer-events: none;
+  padding: 6px 14px; line-height: 2.1;
+  letter-spacing: 4px; user-select: none; z-index: 0;
+}
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
+}
+
+.flash-cell    { animation: cellFlash 0.7s ease forwards; }
+.flash-row     { animation: rowHighlight 1s ease forwards; }
+.modal-enter   { animation: modalIn 0.3s cubic-bezier(.34,1.56,.64,1); }
+.bounce-correct { animation: correctBounce 0.5s ease; }
+.shake-wrong    { animation: wrongShake 0.5s ease; }
+.timer-danger   { animation: timerPulse 1s ease infinite; }
+
+/* ── Sidebar layout ── */
+body { overflow-x: hidden; }
+.contest-sidebar {
+  width: 215px; flex-shrink: 0;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  background: #fff; border-right: 1px solid #e5e7eb;
+  display: flex; flex-direction: column;
+  z-index: 50; overflow: hidden;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+  transition: width 0.25s cubic-bezier(.4,0,.2,1);
+}
+.contest-sidebar.collapsed { width: 40px; overflow: visible; }
+.contest-sidebar.collapsed .hide-on-collapse { display: none !important; }
+.contest-sidebar.collapsed .sidebar-brand { padding: 16px 0; display: flex; flex-direction: column; align-items: center; }
+.contest-sidebar.collapsed .sidebar-brand > div { margin-bottom: 0; }
+.contest-sidebar.collapsed .sidebar-nav-item { padding: 10px 0; justify-content: center; }
+.contest-sidebar.collapsed .sidebar-nav-item svg { margin-left: -3px; }
+.sidebar-toggle-btn {
+  width: 40px; min-height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-bottom: 1px solid #e5e7eb;
+  cursor: pointer; color: #94a3b8; transition: all 0.15s;
+}
+.sidebar-toggle-btn:hover { color: #16a34a; background: #f0fdf4; }
+.sidebar-brand {
+  background: linear-gradient(160deg, #052e16, #064e3b 50%, #065f46);
+  padding: 16px 14px; flex-shrink: 0;
+}
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 14px; font-size: 13px; font-weight: 500;
+  color: #64748b; cursor: pointer; transition: all 0.18s;
+  border-left: 3px solid transparent; border: none;
+  width: 100%; text-align: left; background: transparent;
+  position: relative;
+}
+.sidebar-tooltip {
+  position: absolute; left: 100%; top: 50%;
+  transform: translateY(-50%) translateX(10px);
+  background: #1e293b; color: white;
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 14px; font-weight: 500;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; visibility: hidden; z-index: 50;
+  transition: opacity 0.05s ease-out, transform 0.05s ease-out;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+.sidebar-tooltip::before {
+  content: ''; position: absolute;
+  right: 100%; top: 50%; transform: translateY(-50%);
+  border-width: 5px; border-style: solid;
+  border-color: transparent #1e293b transparent transparent;
+}
+.contest-sidebar.collapsed .sidebar-nav-item:hover .sidebar-tooltip {
+  opacity: 1; visibility: visible;
+  transform: translateY(-50%) translateX(14px);
+}
+.sidebar-nav-item:hover { color: #16a34a; background: #f0fdf4; border-left-color: #86efac; }
+.sidebar-nav-item.active { color: #16a34a; font-weight: 700; background: #f0fdf4; border-left-color: #16a34a; }
+.contest-main {
+  margin-left: 40px; margin-top: 0;
+  padding: 18px 20px; min-height: 100vh;
+  transition: margin-left 0.25s cubic-bezier(.4,0,.2,1);
+}
+.contest-main.sidebar-expanded { margin-left: 215px; }
+
+/* Progress bar */
+.progress-wrapper {
+  position: relative; z-index: 20;
+  height: 32px;
+  background: #1b4332; overflow: hidden;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.progress-bg-fill {
+  position: absolute; top:0; left:0; bottom:0;
+  background: linear-gradient(90deg, #059669 0%, #10b981 60%, #34d399 100%);
+  transition: width 1s linear;
+  box-shadow: 2px 0 12px rgba(16,185,129,0.5);
+}
+.progress-bg-fill::after {
+  content: '';
+  position: absolute; top:0; right:0; bottom:0; width:40px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18));
+}
+.progress-text {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  letter-spacing: 0.4px; z-index: 1;
+  white-space: nowrap; gap: 6px;
+}
+.progress-text.ended   { color: #d1fae5; }
+.progress-text.upcoming { color: #a7f3d0; }
+@keyframes progressShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.progress-shimmer {
+  position: absolute; top:0; bottom:0; width:25%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: progressShimmer 2.5s ease-in-out infinite;
+}
+
+/* Frozen / pending cell */
+.cell-pending { background: #bfdbfe; }
+.cell-pending .cell-num  { color: #1e40af; font-weight: 800; }
+.cell-pending .cell-time { color: #3b82f6; font-size: 9px; }
+
+/* ═══════════════════════════════════
+   ICPC SCOREBOARD - Green theme
+═══════════════════════════════════ */
+.scoreboard { border-collapse: collapse; width: 100%; font-size: 13px; }
+.scoreboard th, .scoreboard td { border: 1px solid #d4d8dc; }
+
+/* Header row - dark green */
+.scoreboard thead th {
+  background: #1b4332; color: #e2e8f0;
+  padding: 9px 10px; font-weight: 600; font-size: 12px;
+  letter-spacing: 0.4px; text-transform: uppercase; white-space: nowrap;
+}
+
+/* Problem header - clickable */
+.prob-th {
+  cursor: pointer; text-align: center; min-width: 68px;
+  color: #86efac !important;
+  transition: background 0.15s;
+}
+.prob-th:hover { background: #144a28 !important; }
+.prob-th .prob-short { font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px; line-height: 1.2; max-width: 60px; white-space: normal; }
+
+/* Body rows */
+.scoreboard tbody tr { transition: background 0.2s; }
+.scoreboard tbody tr:nth-child(even) { background: #fafbfc; }
+.scoreboard tbody tr:hover { background: #f0fdf4 !important; }
+.scoreboard tbody tr.my-row { background: #fefce8 !important; }
+.scoreboard tbody tr.my-row:hover { background: #fef9c3 !important; }
+.scoreboard td { padding: 6px 10px; vertical-align: middle; }
+
+/* Problem cells */
+.prob-td { text-align: center; padding: 3px !important; }
+.cell-wrap { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 3px; padding: 4px 6px; margin: 1px; }
+
+/* Green - solved (ICPC style) */
+.cell-ac-first { background: #1b6b3a; }
+.cell-ac       { background: #86efac; }
+.cell-ac-first .cell-num  { color: #fff; }
+.cell-ac-first .cell-time { color: rgba(255,255,255,0.85); }
+.cell-ac .cell-num  { color: #14532d; font-weight: 800; }
+.cell-ac .cell-time { color: rgba(20,83,45,0.8); }
+
+/* Red - wrong only */
+.cell-wa { background: #b83c2b; }
+.cell-wa .cell-num { color: #fff; }
+
+/* Numbers inside cell */
+.cell-num  { font-size: 12px; font-weight: 700; line-height: 1.3; }
+.cell-time { font-size: 11px; line-height: 1.2; }
+
+/* Rank */
+.rank-cell { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; color: #475569; }
+.medal { font-size: 16px; }
+
+/* Solved / penalty columns */
+.slv-cell  { font-weight: 800; font-size: 16px; color: #1a5c2e; text-align: center; }
+.time-cell { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #475569; text-align: center; }
+
+/* ═══════════════════════════════════
+   MCQ MODAL
+═══════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(10,20,40,0.65);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-box {
+  background: #fff; border-radius: 20px;
+  width: 100%; max-width: 680px; max-height: 92vh; overflow-y: auto;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.3);
+}
+.modal-header {
+  position: sticky; top: 0; z-index: 5;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 18px 22px;
+  display: flex; align-items: center; gap: 14px;
+}
+.label-badge {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 20px; color: white; flex-shrink: 0;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+}
+.label-badge.solved { background: linear-gradient(135deg, #16a34a, #059669); box-shadow: 0 4px 12px rgba(22,163,74,0.35); }
+
+/* Choice cards */
+.choice-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  border: 2px solid #e2e8f0; border-radius: 12px;
+  padding: 13px 16px; cursor: pointer; width: 100%;
+  background: white; text-align: left;
+  transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+  margin-bottom: 10px; position: relative; overflow: hidden;
+}
+.choice-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(37,99,235,0.04), transparent);
+  opacity: 0; transition: opacity 0.2s;
+}
+.choice-card:hover:not([disabled]) { border-color: #93c5fd; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
+.choice-card:hover:not([disabled])::before { opacity: 1; }
+.choice-card.selected { border-color: #2563eb; background: #eff6ff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(37,99,235,0.15); }
+.choice-card.correct  { border-color: #16a34a; background: #f0fdf4; cursor: default; animation: correctBounce 0.5s ease; }
+.choice-card.wrong-pick { border-color: #dc2626; background: #fef2f2; cursor: default; animation: wrongShake 0.4s ease; }
+.choice-card[disabled] { cursor: default; }
+
+.choice-circle {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0;
+  background: #f1f5f9; color: #475569;
+  transition: all 0.18s;
+}
+.choice-card.selected .choice-circle { background: #2563eb; color: white; }
+.choice-card.correct  .choice-circle { background: #16a34a; color: white; }
+.choice-card.wrong-pick .choice-circle { background: #dc2626; color: white; }
+
+/* Verdict */
+.verdict-correct { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border: 1.5px solid #86efac; border-radius: 14px; padding: 14px 18px; }
+.verdict-wrong   { background: linear-gradient(135deg,#fff1f2,#fee2e2); border: 1.5px solid #fca5a5; border-radius: 14px; padding: 14px 18px; }
+
+/* Submit button */
+.submit-btn {
+  width: 100%; padding: 14px; border-radius: 13px; border: none;
+  font-weight: 700; font-size: 15px; cursor: pointer;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: white; transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(37,99,235,0.35);
+}
+.submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.45); }
+.submit-btn:active:not(:disabled) { transform: translateY(0); }
+.submit-btn:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+
+/* Problem cards in Problems tab */
+.prob-card {
+  background: white; border-radius: 14px; border: 1.5px solid #e2e8f0;
+  padding: 18px; cursor: pointer;
+  transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+  position: relative; overflow: hidden;
+}
+.prob-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.5));
+  pointer-events: none;
+}
+.prob-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 12px 28px rgba(0,0,0,0.1); border-color: transparent; }
+
+/* Realtime dot */
+.rt-dot {
+  width: 8px; height: 8px; background: #10b981; border-radius: 50%;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Legend */
+.legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
+.legend-sq { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+/* Multiple answer choice */
+.choice-card.multi-selected { border-color: #7c3aed; background: #f5f3ff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,58,237,0.15); }
+.choice-card.multi-correct  { border-color: #16a34a; background: #f0fdf4; cursor: default; }
+.choice-card.multi-wrong    { border-color: #dc2626; background: #fef2f2; opacity: 0.7; cursor: default; }
+
+/* Matching select */
+.match-select {
+  width: 100%; border: 2px solid #e2e8f0; border-radius: 10px;
+  padding: 8px 12px; font-size: 13px; color: #1e293b; cursor: pointer;
+  background: white; outline: none; transition: border-color 0.18s;
+}
+.match-select:focus { border-color: #f97316; }
+.match-select.match-correct { border-color: #16a34a; background: #f0fdf4; }
+.match-select.match-wrong   { border-color: #dc2626; background: #fef2f2; }
+
+/* Ordering drag item */
+.order-item {
+  display: flex; align-items: center; gap: 10px;
+  border: 2px solid #e2e8f0; border-radius: 12px;
+  padding: 12px 14px; background: white; margin-bottom: 8px;
+  transition: all 0.18s; user-select: none;
+}
+.order-item.dragging { opacity: 0.5; border-color: #6ee7b7; }
+.order-item.drag-over { border-color: #059669; background: #f0fdf4; transform: scale(1.01); }
+.order-item.order-correct { border-color: #16a34a; background: #f0fdf4; }
+.order-item.order-wrong   { border-color: #dc2626; background: #fef2f2; }
+.order-handle { color: #94a3b8; cursor: grab; flex-shrink: 0; font-size: 18px; line-height: 1; }
+.order-handle:active { cursor: grabbing; }
+.order-num { width: 24px; height: 24px; border-radius: 50%; background: #e2e8f0; color: #475569; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="contest-sidebar collapsed" id="contestSidebar">
+  <!-- Toggle button - always visible -->
+  <button onclick="toggleSidebar()" class="sidebar-toggle-btn" title="Mở/đóng menu">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain"/>
+      </div>
+      <span class="text-white/70 text-xs font-semibold uppercase tracking-wider hide-on-collapse">Kiểm tra AI</span>
+    </div>
+    <h2 class="font-bold text-white text-sm leading-tight hide-on-collapse" id="contestName">Đang tải...</h2>
+    <p class="text-white/55 text-xs mt-1.5 leading-relaxed hide-on-collapse" id="contestDesc"></p>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="p-2 pt-3 flex-1">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pb-1.5 hide-on-collapse">Điều hướng</p>
+    <button id="tab-scoreboard" onclick="showTab('scoreboard')" class="sidebar-nav-item active">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="hide-on-collapse">Bảng xếp hạng</span>
+      <div class="sidebar-tooltip">Bảng xếp hạng</div>
+    </button>
+    <button id="tab-problems" onclick="showTab('problems')" class="sidebar-nav-item">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="hide-on-collapse">Câu hỏi</span>
+      <div class="sidebar-tooltip">Câu hỏi</div>
+    </button>
+  </nav>
+
+  <!-- Contest time info -->
+  <div class="px-4 py-3 border-t border-gray-100 space-y-2.5 hide-on-collapse">
+    <div>
+      <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Bắt đầu</p>
+      <p class="text-xs text-gray-700 font-medium" id="contestStartDisplay">—</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Kết thúc</p>
+      <p class="text-xs text-gray-700 font-medium" id="contestEndDisplay">—</p>
+    </div>
+  </div>
+
+  <!-- User + back link -->
+  <div class="px-4 py-3 border-t border-gray-100 hide-on-collapse">
+    <div id="nicknameDisplay" class="flex items-center gap-1.5 text-xs text-gray-600 font-medium mb-3 min-h-[20px]"></div>
+    <a href="/" class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-emerald-600 transition-colors">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Danh sách thi
+    </a>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="contest-main" id="contestMain">
+
+  <!-- Contest header -->
+  <div class="hero-gradient text-white relative overflow-hidden rounded-xl mb-6 shadow-sm mx-1">
+    <!-- Decimal number pattern -->
+    <div class="num-bg" id="numBg" aria-hidden="true"></div>
+    <!-- Orbs -->
+    <div class="orb w-80 h-80 bg-emerald-300/10 -top-20 -left-20"></div>
+    <div class="orb w-96 h-96 bg-green-400/8 -bottom-32 -right-16"></div>
+    
+    <div class="relative px-5 py-4 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg flex-shrink-0">
+          <img src="/photo/images.png" alt="Logo" class="w-10 h-10 object-contain"/>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight leading-snug" id="contestNameMain">—</h1>
+          <div class="flex items-center gap-2 mt-1 text-[11px] font-medium text-emerald-100/90 uppercase tracking-wider">
+            <span>Bắt đầu: <span id="contestStartMain">—</span></span>
+            <span class="opacity-50">|</span>
+            <span>Kết thúc: <span id="contestEndMain">—</span></span>
+          </div>
+        </div>
+      </div>
+      <div id="headerUserDisplay" class="flex items-center gap-2 text-sm font-semibold text-white"></div>
+    </div>
+  </div>
+
+  <!-- Freeze banner -->
+  <div id="freezeBanner" class="hidden mb-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-3">
+    <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+    <div class="text-sm text-blue-700">
+      <span class="font-bold">Bảng xếp hạng đang bị đóng băng</span>
+      — Kết quả các bài nộp trong 1/5 thời gian cuối sẽ được công bố sau khi admin công khai.
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-wrapper">
+    <div class="progress-bg-fill" id="progressFill" style="width:0%">
+      <div class="progress-shimmer" id="progressShimmer"></div>
+    </div>
+    <div class="progress-text" id="progressText">—</div>
+  </div>
+
+  <!-- SCOREBOARD TAB -->
+  <div id="pane-scoreboard">
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="legend"><div class="legend-sq" style="background:#1b6b3a"></div> First solve</div>
+        <div class="legend"><div class="legend-sq" style="background:#86efac;border:1px solid #6ee7b7"></div> Solved</div>
+        <div class="legend"><div class="legend-sq" style="background:#b83c2b"></div> Wrong</div>
+        <div class="legend"><div class="legend-sq" style="background:#bfdbfe;border:1px solid #93c5fd"></div> Pending</div>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+        <div class="rt-dot"></div> Realtime
+      </div>
+    </div>
+
+    <div class="rounded-xl overflow-hidden shadow-md border border-gray-200">
+      <div class="overflow-x-auto">
+        <table class="scoreboard" id="scoreboardTable">
+          <thead><tr id="scoreboardHead"></tr></thead>
+          <tbody id="scoreboardBody">
+            <tr><td colspan="20" class="text-center text-gray-400 py-12 text-sm">
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                Đang tải bảng xếp hạng...
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="text-xs text-gray-400 mt-2 pl-1">
+      Số trên ô = số lần nộp · Số dưới = thời gian (phút) · Ô xanh dương = chờ công bố · Nhấn tiêu đề cột để xem câu hỏi
+    </p>
+  </div>
+
+  <!-- PROBLEMS TAB -->
+  <div id="pane-problems" class="hidden">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div id="problemList" class="divide-y divide-gray-100"></div>
+      <div id="problemPagination"></div>
+    </div>
+  </div>
+</main>
+
+<!-- MCQ MODAL -->
+<div id="mcqModal" class="modal-overlay hidden" onclick="handleOverlayClick(event)">
+  <div class="modal-box modal-enter" id="modalBox">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="label-badge" id="modalLabelBadge">A</div>
+      <div class="flex-1 min-w-0">
+        <h2 id="modalTitle" class="font-bold text-gray-900 text-base leading-tight"></h2>
+        <p id="modalStatus" class="text-xs text-gray-400 mt-0.5"></p>
+      </div>
+      <button onclick="closeModal()"
+        class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors text-lg flex-shrink-0">
+        ✕
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6">
+      <!-- Description -->
+      <div id="modalDesc" class="text-gray-700 text-sm leading-relaxed mb-6 whitespace-pre-wrap bg-gray-50 rounded-xl p-4 border border-gray-100"></div>
+
+      <!-- Verdict -->
+      <div id="verdictBanner" class="mb-5 hidden"></div>
+
+      <!-- Choices -->
+      <div id="choicesContainer" class="mb-5"></div>
+
+      <!-- Submit -->
+      <div id="submitArea"></div>
+
+      <!-- History -->
+      <div class="mt-5 pt-5 border-t border-gray-100">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Lịch sử nộp bài</span>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const CONTEST_ID = params.get('id');
+const token = localStorage.getItem('token');
+const myParticipantId = localStorage.getItem('participantId');
+const nickname = localStorage.getItem('nickname');
+const myOrganization = localStorage.getItem('organization') || '';
+
+let contestData = null;
+let questions = [];
+let scoreboard = { questions: [], rows: [] };
+let firstSolvers = {};
+let currentQuestion = null;
+let selectedAnswer = null;   // single: int | multiple: int[] | matching: string[] | ordering: string[]
+let lastScoreboardHash = '';
+
+const CHOICE_LABELS = ['A','B','C','D','E','F','G','H'];
+const GRAD_COLORS = [
+  'from-blue-500 to-indigo-600',
+  'from-violet-500 to-purple-600',
+  'from-emerald-500 to-teal-600',
+  'from-orange-500 to-amber-600',
+  'from-pink-500 to-rose-600',
+  'from-cyan-500 to-blue-600',
+  'from-red-500 to-orange-600',
+  'from-green-500 to-emerald-600',
+];
+
+// ─────────────────────────────────────────────
+async function init() {
+  if (!CONTEST_ID) { location.href = '/'; return; }
+  if (nickname) {
+    document.getElementById('nicknameDisplay').innerHTML =
+      `<svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>${esc(nickname)}${myOrganization ? `<span class="text-gray-400 ml-1">(${esc(myOrganization)})</span>` : ''}`;
+    document.getElementById('headerUserDisplay').innerHTML =
+      `<div class="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10"><div class="w-6 h-6 rounded-full bg-emerald-400 text-emerald-950 flex items-center justify-center font-bold text-xs">${esc(nickname[0].toUpperCase())}</div><div class="leading-tight"><div>${esc(nickname)}</div>${myOrganization ? `<div style="font-size:10px;opacity:0.7">${esc(myOrganization)}</div>` : ''}</div></div>`;
+  }
+
+  const [contestRes, questionsRes, configRes] = await Promise.all([
+    fetch(`/api/contests/${CONTEST_ID}`),
+    fetch(`/api/questions/contest/${CONTEST_ID}`),
+    fetch('/api/config')
+  ]);
+
+  contestData = await contestRes.json();
+  questions   = await questionsRes.json();
+  const config = await configRes.json();
+
+  document.title = contestData.name + ' - ACM-ICPC';
+  document.getElementById('contestName').textContent = contestData.name;
+  if (contestData.description) {
+    document.getElementById('contestDesc').textContent = contestData.description;
+  }
+
+  renderProblems();
+  startTimer();
+
+  // Supabase Realtime
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+  supabase.channel('sb-live')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'submissions',
+      filter: `contest_id=eq.${CONTEST_ID}`
+    }, payload => {
+      loadScoreboard(payload.new?.participant_id);
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'contests',
+      filter: `id=eq.${CONTEST_ID}`
+    }, payload => {
+      loadScoreboard();
+    })
+    .subscribe();
+
+  await loadScoreboard();
+
+  // Fallback polling every 5s to ensure UI is always fresh
+  setInterval(() => loadScoreboard(), 5000);
+}
+
+// ── Scoreboard ────────────────────────────────
+async function loadScoreboard(updatedParticipantId) {
+  const viewerQuery = myParticipantId ? `?viewerId=${myParticipantId}` : '';
+  const res = await fetch(`/api/contests/${CONTEST_ID}/scoreboard${viewerQuery}`);
+  const data = await res.json();
+
+  const freezeBanner = document.getElementById('freezeBanner');
+  const isFrozenState = data.freeze?.active;
+  if (isFrozenState) freezeBanner.classList.remove('hidden');
+  else freezeBanner.classList.add('hidden');
+
+  // Detect first solvers
+  firstSolvers = {};
+  for (const row of (data.rows || [])) {
+    for (const [label, result] of Object.entries(row.questions || {})) {
+      if (result?.solved && !firstSolvers[label]) {
+        firstSolvers[label] = row.participantId;
+      }
+    }
+  }
+
+  const newHash = JSON.stringify(data);
+  const changed = newHash !== lastScoreboardHash;
+  lastScoreboardHash = newHash;
+
+  scoreboard = data;
+  if (changed) renderScoreboard(updatedParticipantId);
+}
+
+function renderScoreboard(flashParticipantId) {
+  const { questions: qs, rows } = scoreboard;
+  const head = document.getElementById('scoreboardHead');
+  const body = document.getElementById('scoreboardBody');
+
+  // ── Header ──
+  head.innerHTML = `
+    <th style="width:44px;text-align:center">RK</th>
+    <th style="min-width:90px;max-width:120px;padding:9px 14px">THÀNH VIÊN</th>
+    <th style="width:56px;text-align:center">SLV.</th>
+    <th style="width:64px;text-align:center">TIME</th>
+    ${(qs||[]).map(q => `
+      <th class="prob-th" onclick="openProblem('${q.label}')" title="${esc(q.title)}">
+        ${esc(q.label)}
+      </th>`).join('')}`;
+
+  // ── Body ──
+  if (!rows?.length) {
+    body.innerHTML = `<tr><td colspan="${4+(qs||[]).length}" class="text-center text-gray-400 py-14 text-sm">
+      <svg class="w-8 h-8 mb-2 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21V5m0 0h13l-3 4 3 4H3"/></svg>Chưa có thí sinh nào tham gia
+    </td></tr>`;
+    return;
+  }
+
+  const medals = [
+    '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#f59e0b;color:#fff;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(245,158,11,0.5)">1</span>',
+    '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#94a3b8;color:#fff;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(148,163,184,0.5)">2</span>',
+    '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#cd7c3a;color:#fff;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(205,124,58,0.5)">3</span>'
+  ];
+
+  let currentRank = 1;
+  let displayRank = 1;
+
+  body.innerHTML = rows.map((row, idx) => {
+    if (idx > 0) {
+      const prev = rows[idx - 1];
+      if (row.totalSolved !== prev.totalSolved || row.totalPenalty !== prev.totalPenalty) {
+        displayRank = currentRank;
+      }
+    }
+    currentRank++;
+
+    const isMe = row.participantId === myParticipantId;
+    const shouldFlash = flashParticipantId === row.participantId;
+    const trClass = `${isMe ? 'my-row' : ''} ${shouldFlash ? 'flash-row' : ''}`;
+    const rank = displayRank <= 3 ? `<span class="medal">${medals[displayRank - 1]}</span>` : `<span class="rank-cell">${displayRank}</span>`;
+
+    const cells = (qs||[]).map(q => {
+      const r = row.questions[q.label];
+      if (!r) return `<td class="prob-td"><div class="cell-wrap"></div></td>`;
+      if (r.solved) {
+        const isFirst = firstSolvers[q.label] === row.participantId;
+        const cls = isFirst ? 'cell-ac-first' : 'cell-ac';
+        return `<td class="prob-td">
+          <div class="cell-wrap ${cls} ${shouldFlash ? 'flash-cell' : ''}">
+            <div class="cell-num">${r.attempts > 1 ? `+${r.attempts-1}` : '✓'}</div>
+            <div class="cell-time">${r.time}m</div>
+          </div>
+        </td>`;
+      }
+      if (r.pending > 0) {
+        return `<td class="prob-td">
+          <div class="cell-wrap cell-pending ${shouldFlash ? 'flash-cell' : ''}">
+            <div class="cell-num">?</div>
+            <div class="cell-time">+${r.pending}</div>
+          </div>
+        </td>`;
+      }
+      return `<td class="prob-td">
+        <div class="cell-wrap cell-wa">
+          <div class="cell-num">-${r.attempts}</div>
+        </div>
+      </td>`;
+    }).join('');
+
+    return `<tr class="${trClass}">
+      <td style="text-align:center;padding:7px 4px">${rank}</td>
+      <td style="padding:7px 14px;font-weight:${isMe?700:500};color:${isMe?'#1d4ed8':'#1e293b'}">
+        <div class="leading-tight">
+          <div>${esc(row.nickname)}${isMe ? '<span style="font-size:10px;color:#94a3b8;margin-left:4px">(bạn)</span>' : ''}</div>
+          ${row.organization ? `<div style="font-size:11px;color:#94a3b8;font-weight:400">${esc(row.organization)}</div>` : ''}
+        </div>
+      </td>
+      <td class="slv-cell">${row.totalSolved}</td>
+      <td class="time-cell">${row.totalPenalty}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+}
+
+// ── Problems tab ──────────────────────────────
+let currentProblemPage = 1;
+let problemPageSize = 15;
+
+window.changeProblemPage = function(page) {
+  currentProblemPage = page;
+  renderProblems();
+};
+window.setProblemPageSize = function(n) {
+  problemPageSize = n;
+  currentProblemPage = 1;
+  renderProblems();
+};
+
+function renderProblems() {
+  const container = document.getElementById('problemList');
+  const pagination = document.getElementById('problemPagination');
+  if (!questions.length) {
+    if (container) container.innerHTML = '<div class="text-gray-400 text-center py-10 text-sm">Chưa có câu hỏi.</div>';
+    if (pagination) pagination.innerHTML = '';
+    return;
+  }
+
+  const total = questions.length;
+  const totalPages = Math.max(1, Math.ceil(total / problemPageSize));
+  if (currentProblemPage > totalPages) currentProblemPage = totalPages;
+  if (currentProblemPage < 1) currentProblemPage = 1;
+
+  const startIdx = (currentProblemPage - 1) * problemPageSize;
+  const endIdx   = Math.min(startIdx + problemPageSize, total);
+  const pageItems = questions.slice(startIdx, endIdx);
+
+  if (container) container.innerHTML = pageItems.map((q, idx) => {
+    const absIdx = startIdx + idx;
+    return `
+    <div onclick="openProblem('${esc(q.label)}')" class="p-4 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-4">
+      <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-gradient-to-br ${GRAD_COLORS[absIdx%GRAD_COLORS.length]} flex items-center justify-center text-white font-bold text-lg shadow-sm">${esc(q.label)}</div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-gray-900 text-sm truncate">${esc(q.title)}</h3>
+        <p class="text-xs text-gray-500 mt-0.5 truncate">${esc(q.description ? q.description.slice(0, 80) + '...' : 'Nhấn để xem chi tiết câu hỏi')}</p>
+      </div>
+      <div class="flex-shrink-0 text-emerald-600 text-xs font-semibold bg-emerald-100/50 px-3 py-1.5 rounded-full border border-emerald-100">
+        Trả lời →
+      </div>
+    </div>`;
+  }).join('');
+
+  if (!pagination) return;
+
+  const sizeOpts = [10, 15, 25, 50].map(n =>
+    `<option value="${n}"${n === problemPageSize ? ' selected' : ''}>${n}</option>`
+  ).join('');
+
+  // page buttons with ellipsis
+  const delta = 2;
+  let lo = Math.max(1, currentProblemPage - delta);
+  let hi = Math.min(totalPages, currentProblemPage + delta);
+  if (currentProblemPage - delta < 1)           hi = Math.min(totalPages, hi + (delta - currentProblemPage + 1));
+  if (currentProblemPage + delta > totalPages)  lo = Math.max(1, lo - (currentProblemPage + delta - totalPages));
+  lo = Math.max(1, lo); hi = Math.min(totalPages, hi);
+
+  let pagesBtns = '';
+  const pgBtn = (p, label, active, disabled) =>
+    `<button onclick="changeProblemPage(${p})" class="px-3 py-1.5 rounded-md border text-sm font-medium transition-colors ${active ? 'border-emerald-600 bg-emerald-50 text-emerald-700 font-bold shadow-sm' : disabled ? 'border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+
+  pagesBtns += pgBtn(currentProblemPage - 1, '‹', false, currentProblemPage <= 1);
+  if (lo > 1) { pagesBtns += pgBtn(1, '1', false, false); if (lo > 2) pagesBtns += `<span class="text-gray-400 text-sm px-1">…</span>`; }
+  for (let p = lo; p <= hi; p++) pagesBtns += pgBtn(p, p, p === currentProblemPage, false);
+  if (hi < totalPages) { if (hi < totalPages - 1) pagesBtns += `<span class="text-gray-400 text-sm px-1">…</span>`; pagesBtns += pgBtn(totalPages, totalPages, false, false); }
+  pagesBtns += pgBtn(currentProblemPage + 1, '›', false, currentProblemPage >= totalPages);
+
+  pagination.innerHTML = `
+    <div class="flex items-center justify-between flex-wrap gap-3 px-4 py-3 border-t border-gray-100">
+      <div class="flex items-center gap-2 text-xs text-gray-400">
+        <span>Hiển thị <strong class="text-gray-600">${startIdx+1}–${endIdx}</strong> trong <strong class="text-gray-600">${total}</strong> câu hỏi</span>
+        <span>·</span>
+        <label class="flex items-center gap-1.5">Mỗi trang:
+          <select onchange="setProblemPageSize(+this.value)"
+            class="border border-gray-200 rounded-md text-xs px-2 py-1 focus:outline-none focus:border-emerald-400" style="height:26px">
+            ${sizeOpts}
+          </select>
+        </label>
+      </div>
+      <div class="flex items-center gap-1">${pagesBtns}</div>
+    </div>`;
+}
+
+// ── Modal ─────────────────────────────────────
+async function openProblem(label) {
+  const q = questions.find(x => x.label === label);
+  if (!q) return;
+  currentQuestion = q;
+  selectedAnswer  = null;
+
+  document.getElementById('modalLabelBadge').textContent = label;
+  document.getElementById('modalLabelBadge').className = 'label-badge';
+  document.getElementById('modalTitle').textContent = q.title;
+  document.getElementById('modalDesc').textContent = q.description;
+  document.getElementById('verdictBanner').classList.add('hidden');
+  document.getElementById('verdictBanner').innerHTML = '';
+  document.getElementById('mcqModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  const box = document.getElementById('modalBox');
+  box.classList.remove('modal-enter'); void box.offsetWidth; box.classList.add('modal-enter');
+
+  let history = [];
+  if (token) {
+    const res = await fetch(`/api/submissions/question/${q.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    history = await res.json();
+  }
+
+  const alreadySolved = history.some(s => s.status === 'correct');
+  renderChoices(q, alreadySolved, history);
+  renderSubmitArea(alreadySolved);
+  renderHistory(q, history);
+
+  if (alreadySolved) {
+    document.getElementById('modalLabelBadge').className = 'label-badge solved';
+    document.getElementById('modalStatus').textContent = '✓ Đã giải xong';
+  } else {
+    const hints = {
+      single: 'Chọn một đáp án và nhấn nộp',
+      multiple: 'Chọn TẤT CẢ đáp án đúng rồi nhấn nộp',
+      matching: 'Nối mỗi mục bên trái với mục bên phải tương ứng',
+      ordering: 'Kéo hoặc dùng nút ↑↓ để sắp xếp đúng thứ tự'
+    };
+    document.getElementById('modalStatus').textContent = hints[q.question_type || 'single'] || hints.single;
+  }
+}
+
+// ─── Single choice ───────────────────────────
+function renderSingleChoices(q, alreadySolved, history) {
+  const container = document.getElementById('choicesContainer');
+  const correctSub = history.find(s => s.status === 'correct');
+  const wrongSet   = new Set(history.filter(s => s.status === 'wrong').map(s => s.answer_index));
+  container.innerHTML = (q.choices || []).map((ch, i) => {
+    let cls = 'choice-card';
+    if (alreadySolved) {
+      if (correctSub?.answer_index === i) cls += ' correct';
+      else if (wrongSet.has(i)) cls += ' wrong-pick';
+    }
+    return `<button class="${cls}" id="choice-${i}" onclick="selectSingle(${i})" ${alreadySolved?'disabled':''}>
+      <span class="choice-circle" id="cc-${i}">${CHOICE_LABELS[i]||i}</span>
+      <span class="text-sm text-gray-800 flex-1 leading-relaxed">${esc(ch)}</span>
+    </button>`;
+  }).join('');
+}
+function selectSingle(idx) {
+  const prev = selectedAnswer;
+  if (prev === idx) { document.getElementById(`choice-${idx}`)?.classList.remove('selected'); selectedAnswer = null; return; }
+  if (prev !== null) document.getElementById(`choice-${prev}`)?.classList.remove('selected');
+  selectedAnswer = idx;
+  document.getElementById(`choice-${idx}`)?.classList.add('selected');
+}
+
+// ─── Multiple choice ─────────────────────────
+function renderMultipleChoices(q, alreadySolved, history) {
+  const container = document.getElementById('choicesContainer');
+  selectedAnswer = alreadySolved ? null : [];
+  const correctSub = history.find(s => s.status === 'correct');
+  const correctAns = correctSub?.answer || null; // array of correct indices
+  container.innerHTML = (q.choices || []).map((ch, i) => {
+    let cls = 'choice-card';
+    if (alreadySolved && correctAns) {
+      cls += correctAns.includes(i) ? ' multi-correct' : '';
+    }
+    return `<button class="${cls}" id="mchoice-${i}" onclick="selectMultiple(${i})" ${alreadySolved?'disabled':''}>
+      <span class="choice-circle" id="mcc-${i}" style="border-radius:4px">${CHOICE_LABELS[i]||i}</span>
+      <span class="text-sm text-gray-800 flex-1 leading-relaxed">${esc(ch)}</span>
+      ${alreadySolved && correctAns?.includes(i) ? '<span class="text-emerald-500 font-bold ml-auto">✓</span>' : ''}
+    </button>`;
+  }).join('');
+}
+function selectMultiple(idx) {
+  if (!Array.isArray(selectedAnswer)) selectedAnswer = [];
+  const pos = selectedAnswer.indexOf(idx);
+  if (pos >= 0) {
+    selectedAnswer.splice(pos, 1);
+    document.getElementById(`mchoice-${idx}`)?.classList.remove('multi-selected');
+  } else {
+    selectedAnswer.push(idx);
+    document.getElementById(`mchoice-${idx}`)?.classList.add('multi-selected');
+  }
+}
+
+// ─── Matching ────────────────────────────────
+function renderMatchingChoices(q, alreadySolved, history) {
+  const container = document.getElementById('choicesContainer');
+  const leftItems  = q.choices || [];
+  const rightOpts  = q.match_options || [];
+  selectedAnswer   = alreadySolved ? null : new Array(leftItems.length).fill('');
+  const correctSub = history.find(s => s.status === 'correct');
+  const userAns    = correctSub?.answer || null;
+
+  container.innerHTML = leftItems.map((left, i) => {
+    const chosen = alreadySolved ? (userAns?.[i] || '') : '';
+    const isCorrect = alreadySolved; // if solved, it must have been correct
+    const selCls = alreadySolved ? (isCorrect ? 'match-correct' : '') : '';
+    const opts = rightOpts.map(r =>
+      `<option value="${esc(r)}" ${chosen===r?'selected':''}>${esc(r)}</option>`
+    ).join('');
+    return `<div class="flex items-center gap-3 mb-3">
+      <div class="flex-1 text-sm font-medium text-gray-800 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">${esc(left)}</div>
+      <svg class="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      <select class="match-select flex-1 ${selCls}" id="match-${i}" onchange="updateMatch(${i},this.value)" ${alreadySolved?'disabled':''}>
+        <option value="">— Chọn —</option>${opts}
+      </select>
+    </div>`;
+  }).join('');
+}
+function updateMatch(i, val) {
+  if (!Array.isArray(selectedAnswer)) selectedAnswer = [];
+  selectedAnswer[i] = val;
+}
+
+// ─── Ordering ────────────────────────────────
+let dragSrcIdx = null;
+function renderOrderingChoices(q, alreadySolved, history) {
+  const container = document.getElementById('choicesContainer');
+  const items = q.choices || [];
+  const correctSub = history.find(s => s.status === 'correct');
+  const userAns = correctSub?.answer || null;
+
+  if (alreadySolved) {
+    selectedAnswer = null;
+    container.innerHTML = items.map((it, i) => `
+      <div class="order-item order-correct">
+        <span class="order-num">${i+1}</span>
+        <span class="text-sm text-gray-800 flex-1">${esc(it)}</span>
+        <span class="text-emerald-500 font-bold">✓</span>
+      </div>`).join('');
+    return;
+  }
+
+  // Shuffle items for display (Fisher-Yates with deterministic seed from question id)
+  const seed = q.id ? q.id.charCodeAt(0) + q.id.charCodeAt(4) : 42;
+  const shuffled = shuffleSeeded([...items], seed);
+  selectedAnswer = [...shuffled];
+
+  container.innerHTML = shuffled.map((it, i) => `
+    <div class="order-item" id="ord-${i}" draggable="true"
+      ondragstart="dragStart(event,${i})" ondragover="dragOver(event,${i})"
+      ondragleave="dragLeave(event,${i})" ondrop="dragDrop(event,${i})">
+      <span class="order-handle">⠿</span>
+      <span class="order-num" id="ord-num-${i}">${i+1}</span>
+      <span class="text-sm text-gray-800 flex-1">${esc(it)}</span>
+      <div class="flex flex-col gap-0.5">
+        <button onclick="moveOrderItem(${i},-1)" class="text-gray-400 hover:text-gray-700 text-xs leading-none px-1">▲</button>
+        <button onclick="moveOrderItem(${i},+1)" class="text-gray-400 hover:text-gray-700 text-xs leading-none px-1">▼</button>
+      </div>
+    </div>`).join('');
+}
+function shuffleSeeded(arr, seed) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(seed) % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function dragStart(e, i) { dragSrcIdx = i; e.currentTarget.classList.add('dragging'); }
+function dragOver(e, i)  { e.preventDefault(); if (i !== dragSrcIdx) e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e, i) { e.currentTarget.classList.remove('drag-over'); }
+function dragDrop(e, i)  {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (dragSrcIdx === null || dragSrcIdx === i) return;
+  const arr = selectedAnswer;
+  const [moved] = arr.splice(dragSrcIdx, 1);
+  arr.splice(i, 0, moved);
+  dragSrcIdx = null;
+  reRenderOrderItems();
+}
+function moveOrderItem(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= selectedAnswer.length) return;
+  [selectedAnswer[i], selectedAnswer[j]] = [selectedAnswer[j], selectedAnswer[i]];
+  reRenderOrderItems();
+}
+function reRenderOrderItems() {
+  const container = document.getElementById('choicesContainer');
+  if (!container) return;
+  const items = container.querySelectorAll('.order-item');
+  selectedAnswer.forEach((text, i) => {
+    const el = items[i];
+    if (!el) return;
+    el.setAttribute('ondragstart', `dragStart(event,${i})`);
+    el.setAttribute('ondragover',  `dragOver(event,${i})`);
+    el.setAttribute('ondragleave', `dragLeave(event,${i})`);
+    el.setAttribute('ondrop',      `dragDrop(event,${i})`);
+    el.querySelector('.order-num').textContent = i + 1;
+    el.querySelectorAll('button')[0].setAttribute('onclick', `moveOrderItem(${i},-1)`);
+    el.querySelectorAll('button')[1].setAttribute('onclick', `moveOrderItem(${i},+1)`);
+    el.querySelector('.text-sm').textContent = text;
+  });
+}
+
+// ─── Dispatch render by type ──────────────────
+function renderChoices(q, alreadySolved, history) {
+  const qType = q.question_type || 'single';
+  if      (qType === 'single')   renderSingleChoices(q, alreadySolved, history);
+  else if (qType === 'multiple') renderMultipleChoices(q, alreadySolved, history);
+  else if (qType === 'matching') renderMatchingChoices(q, alreadySolved, history);
+  else if (qType === 'ordering') renderOrderingChoices(q, alreadySolved, history);
+}
+
+function renderSubmitArea(alreadySolved) {
+  const area = document.getElementById('submitArea');
+  if (!token) {
+    area.innerHTML = `<div class="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-4 text-sm text-center">
+      Bạn cần <a href="/" class="font-bold underline">tham gia kỳ thi</a> để trả lời câu hỏi này.
+    </div>`;
+    return;
+  }
+  if (alreadySolved) {
+    area.innerHTML = `<div class="text-center py-3 text-emerald-600 font-bold text-base flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Bạn đã trả lời đúng câu hỏi này!
+    </div>`;
+    return;
+  }
+  area.innerHTML = `
+    <button class="submit-btn" onclick="submitAnswer()">Nộp đáp án →</button>
+    <p class="text-xs text-gray-400 text-center mt-2">Mỗi lần nộp sai sẽ bị phạt +20 phút khi tính điểm</p>`;
+}
+
+function renderHistory(q, history) {
+  const el = document.getElementById('historyList');
+  if (!history.length) { el.innerHTML = '<p class="text-xs text-gray-400">Chưa có lần nộp nào.</p>'; return; }
+  const qType = q?.question_type || 'single';
+  el.innerHTML = history.map(s => {
+    const correct = s.status === 'correct';
+    let ansText = '';
+    if (qType === 'single') {
+      ansText = `Chọn <strong>${CHOICE_LABELS[s.answer_index] ?? s.answer_index}</strong>`;
+    } else if (qType === 'multiple') {
+      ansText = `Chọn <strong>${(s.answer||[]).map(i => CHOICE_LABELS[i]??i).join(', ')}</strong>`;
+    } else if (qType === 'matching') {
+      ansText = 'Đã nối';
+    } else if (qType === 'ordering') {
+      ansText = 'Đã sắp xếp';
+    }
+    return `<div class="flex items-center gap-3 py-1.5 text-xs border-b border-gray-50 last:border-0">
+      <span class="font-bold ${correct?'text-emerald-600':'text-red-500'}">${correct?'✓ Đúng':'✗ Sai'}</span>
+      <span class="text-gray-400">${ansText}</span>
+      <span class="text-gray-300 ml-auto">${new Date(s.submitted_at).toLocaleTimeString('vi-VN')}</span>
+    </div>`;
+  }).join('');
+}
+
+async function submitAnswer() {
+  if (!currentQuestion || !token) return;
+  const qType = currentQuestion.question_type || 'single';
+
+  // Validate
+  if (qType === 'single' && selectedAnswer === null) { alert('Vui lòng chọn một đáp án.'); return; }
+  if (qType === 'multiple') {
+    if (!Array.isArray(selectedAnswer) || selectedAnswer.length === 0) { alert('Vui lòng chọn ít nhất một đáp án.'); return; }
+  }
+  if (qType === 'matching') {
+    if (!Array.isArray(selectedAnswer) || selectedAnswer.some(v => !v)) { alert('Vui lòng nối tất cả các mục.'); return; }
+  }
+
+  const btn = document.querySelector('.submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang nộp...'; }
+
+  let payload = { questionId: currentQuestion.id };
+  if (qType === 'single') {
+    payload.answerIndex = selectedAnswer;
+  } else if (qType === 'multiple') {
+    payload.answer = [...selectedAnswer].sort((a, b) => a - b);
+  } else if (qType === 'matching') {
+    payload.answer = selectedAnswer;
+  } else if (qType === 'ordering') {
+    payload.answer = selectedAnswer;
+  }
+
+  const res = await fetch('/api/submissions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Nộp đáp án →'; }
+    if (data.alreadySolved) { renderSubmitArea(true); return; }
+    alert(data.error || 'Có lỗi xảy ra');
+    return;
+  }
+
+  const banner = document.getElementById('verdictBanner');
+  banner.classList.remove('hidden');
+
+  if (data.status === 'correct') {
+    banner.innerHTML = `<div class="verdict-correct flex items-start gap-3">
+      <svg class="w-7 h-7 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div><div class="font-bold text-emerald-700 text-base">Chính xác!</div>
+      <div class="text-emerald-600 text-sm mt-0.5">Bạn đã trả lời đúng câu hỏi này.</div></div>
+    </div>`;
+    const history = await fetch(`/api/submissions/question/${currentQuestion.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json());
+    renderChoices(currentQuestion, true, history);
+    renderSubmitArea(true);
+    renderHistory(currentQuestion, history);
+    document.getElementById('modalLabelBadge').className = 'label-badge solved';
+    document.getElementById('modalStatus').textContent = '✓ Đã giải xong';
+    loadScoreboard(myParticipantId);
+  } else {
+    banner.innerHTML = `<div class="verdict-wrong flex items-start gap-3">
+      <svg class="w-7 h-7 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div><div class="font-bold text-red-600 text-base">Chưa đúng rồi!</div>
+      <div class="text-red-500 text-sm mt-0.5">Hãy thử lại. Mỗi lần sai thêm +20 phút phạt nếu giải được.</div></div>
+    </div>`;
+    if (qType === 'single' && selectedAnswer !== null) {
+      document.getElementById(`choice-${selectedAnswer}`)?.classList.remove('selected');
+      selectedAnswer = null;
+    } else if (qType === 'multiple') {
+      selectedAnswer = [];
+    }
+    // matching & ordering: keep selectedAnswer so DOM stays in sync and user can adjust
+    if (btn) { btn.disabled = false; btn.textContent = 'Nộp đáp án →'; }
+    const history = await fetch(`/api/submissions/question/${currentQuestion.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json());
+    renderHistory(currentQuestion, history);
+  }
+}
+
+function closeModal() {
+  document.getElementById('mcqModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  currentQuestion = null; selectedAnswer = null;
+}
+function handleOverlayClick(e) { if (e.target.id === 'mcqModal') closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Tabs ──────────────────────────────────────
+function showTab(tab) {
+  ['scoreboard','problems'].forEach(t => {
+    document.getElementById(`pane-${t}`).classList.toggle('hidden', t !== tab);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+}
+
+// ── Timer ─────────────────────────────────────
+function startTimer() {
+  // Fill in start/end time display
+  if (contestData) {
+    const fmtFull = iso => new Date(iso).toLocaleString('vi-VN', {
+      day:'2-digit', month:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    });
+    document.getElementById('contestStartDisplay').textContent = fmtFull(contestData.start_time);
+    document.getElementById('contestEndDisplay').textContent   = fmtFull(contestData.end_time);
+    document.getElementById('contestNameMain').textContent  = contestData.name;
+    const startEl = document.getElementById('contestStartMain');
+    if (startEl) startEl.textContent = fmtFull(contestData.start_time);
+    const endEl = document.getElementById('contestEndMain');
+    if (endEl) endEl.textContent = fmtFull(contestData.end_time);
+  }
+
+  function tick() {
+    if (!contestData) return;
+    const now = Date.now();
+    const st  = new Date(contestData.start_time).getTime();
+    const en  = new Date(contestData.end_time).getTime();
+    const tot = en - st;
+    const pct = Math.max(0, Math.min(100, ((now - st) / tot) * 100));
+
+    const fill    = document.getElementById('progressFill');
+    const txt     = document.getElementById('progressText');
+    const shimmer = document.getElementById('progressShimmer');
+
+    fill.style.width = pct + '%';
+
+    const iconClock = `<svg style="width:13px;height:13px;display:inline;margin-right:6px;vertical-align:middle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    const iconDot   = `<svg style="width:8px;height:8px;display:inline;margin-right:6px;vertical-align:middle" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>`;
+    const iconCheck = `<svg style="width:13px;height:13px;display:inline;margin-right:6px;vertical-align:middle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
+
+    if (now < st) {
+      // Upcoming
+      const rem = st - now;
+      fill.style.background = 'linear-gradient(90deg,#2563eb,#60a5fa)';
+      txt.innerHTML = iconClock + `Bắt đầu sau  ${fmtMs(rem)}`;
+      txt.className = 'progress-text upcoming';
+      txt.style.color = '#a7f3d0';
+      if (shimmer) shimmer.style.display = 'block';
+
+    } else if (now <= en) {
+      // Running
+      const rem = en - now;
+      const isUrgent = rem < 300000;
+      fill.style.background = isUrgent
+        ? 'linear-gradient(90deg,#b45309,#f59e0b,#fbbf24)'
+        : 'linear-gradient(90deg,#059669 0%,#10b981 60%,#34d399 100%)';
+      txt.innerHTML = isUrgent
+        ? iconDot + `Còn lại  ${fmtMs(rem)}`
+        : iconDot + `Đang diễn ra  ·  Còn lại  ${fmtMs(rem)}`;
+      txt.className = 'progress-text';
+      txt.style.color = '#fff';
+      if (shimmer) shimmer.style.display = isUrgent ? 'none' : 'block';
+
+    } else {
+      // Ended
+      const isFrozenState = typeof scoreboard !== 'undefined' && scoreboard?.freeze?.active;
+      fill.style.width = '100%';
+      if (isFrozenState) {
+        fill.style.background = 'linear-gradient(90deg,#2563eb,#3b82f6,#60a5fa)';
+        txt.innerHTML = iconClock + 'Kỳ thi đã kết thúc (Đang đóng băng kết quả)';
+        txt.className = 'progress-text ended';
+        txt.style.color = '#fff';
+        if (shimmer) shimmer.style.display = 'block';
+      } else {
+        fill.style.background = 'linear-gradient(90deg,#059669,#10b981,#34d399)';
+        txt.innerHTML = iconCheck + 'Kỳ thi đã kết thúc.';
+        txt.className = 'progress-text ended';
+        txt.style.color = '#fff';
+        if (shimmer) shimmer.style.display = 'none';
+      }
+    }
+  }
+
+  tick();
+  setInterval(tick, 1000);
+}
+
+function fmtMs(ms) {
+  if (ms < 0) ms = 0;
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  return (h>0 ? h+':' : '') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('contestSidebar');
+  const main    = document.getElementById('contestMain');
+  const nowOpen = sidebar.classList.toggle('collapsed');
+  // collapsed = true means we just collapsed it; false means we just opened it
+  main.classList.toggle('sidebar-expanded', !nowOpen);
+  localStorage.setItem('sidebarOpen', nowOpen ? '0' : '1');
+}
+
+// Restore sidebar state (default: collapsed)
+(function() {
+  if (localStorage.getItem('sidebarOpen') === '1') {
+    document.getElementById('contestSidebar').classList.remove('collapsed');
+    document.getElementById('contestMain').classList.add('sidebar-expanded');
+  }
+})();
+// Decimal number background pattern
+(function() {
+  const el = document.getElementById('numBg');
+  if (!el) return;
+  const nums = [3.14159,2.71828,1.41421,0.57721,1.61803,4.66920,0.36787,1.73205,2.99792,1.05457,0.69314,2.30258,1.44269,9.80665,6.02214];
+  let t = '';
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 15; c++) t += nums[(r * 4 + c * 3) % nums.length].toFixed(5) + '  ';
+    t += '\n';
+  }
+  el.textContent = t;
+})();
+
+init();
+</script>
+</body>
+</html>

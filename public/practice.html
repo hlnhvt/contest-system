@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ôn luyện · Hệ thống kiểm tra AI</title>
+<link rel="icon" type="image/png" href="/photo/images.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f0f4f8; }
+
+  /* Sidebar */
+  .contest-sidebar {
+    width: 215px; flex-shrink: 0;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    background: #fff; border-right: 1px solid #e5e7eb;
+    display: flex; flex-direction: column;
+    z-index: 50; overflow: hidden;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    transition: width 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  .contest-sidebar.collapsed { width: 40px; overflow: visible; }
+  .contest-sidebar.collapsed .hide-on-collapse { display: none !important; }
+  .contest-sidebar.collapsed .sidebar-brand { padding: 16px 0; display: flex; flex-direction: column; align-items: center; }
+  .contest-sidebar.collapsed .sidebar-nav-item { padding: 10px 0; justify-content: center; }
+  .sidebar-toggle-btn {
+    width: 40px; min-height: 40px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-bottom: 1px solid #e5e7eb;
+    cursor: pointer; color: #94a3b8; transition: all 0.15s;
+  }
+  .sidebar-toggle-btn:hover { color: #16a34a; background: #f0fdf4; }
+  .sidebar-brand {
+    background: linear-gradient(160deg, #052e16, #064e3b 50%, #065f46);
+    padding: 16px 14px; flex-shrink: 0;
+  }
+  .sidebar-nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 14px; font-size: 13px; font-weight: 500;
+    color: #64748b; cursor: pointer; transition: all 0.18s;
+    border-left: 3px solid transparent; border: none;
+    width: 100%; text-align: left; background: transparent;
+    position: relative; text-decoration: none;
+  }
+  .sidebar-tooltip {
+    position: absolute; left: 100%; top: 50%;
+    transform: translateY(-50%) translateX(10px);
+    background: #1e293b; color: white;
+    padding: 6px 12px; border-radius: 6px;
+    font-size: 14px; font-weight: 500;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; visibility: hidden; z-index: 50;
+    transition: opacity 0.05s ease-out;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  }
+  .sidebar-tooltip::before {
+    content: ''; position: absolute;
+    right: 100%; top: 50%; transform: translateY(-50%);
+    border-width: 5px; border-style: solid;
+    border-color: transparent #1e293b transparent transparent;
+  }
+  .contest-sidebar.collapsed .sidebar-nav-item:hover .sidebar-tooltip { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(14px); }
+  .sidebar-nav-item:hover { color: #16a34a; background: #f0fdf4; border-left-color: #86efac; }
+  .sidebar-nav-item.active { color: #16a34a; font-weight: 700; background: #f0fdf4; border-left-color: #16a34a; }
+  #pageContent { margin-left: 40px; transition: margin-left 0.25s cubic-bezier(.4,0,.2,1); }
+  #pageContent.sidebar-expanded { margin-left: 215px; }
+
+  /* Question types */
+  .choice-btn {
+    display: flex; align-items: flex-start; gap: 10px;
+    width: 100%; text-align: left; padding: 10px 14px;
+    border: 2px solid #e5e7eb; border-radius: 10px;
+    background: #fff; cursor: pointer; transition: all 0.15s;
+    font-size: 14px; color: #1e293b;
+  }
+  .choice-btn:hover { border-color: #6366f1; background: #eef2ff; }
+  .choice-btn.selected { border-color: #6366f1; background: #eef2ff; }
+  .choice-btn.correct { border-color: #10b981; background: #d1fae5; color: #065f46; }
+  .choice-btn.wrong { border-color: #ef4444; background: #fee2e2; color: #7f1d1d; }
+  .choice-btn.reveal-correct { border-color: #10b981; background: #d1fae5; color: #065f46; }
+  .choice-btn:disabled { cursor: default; }
+
+  .choice-letter {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border-radius: 50%; background: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; color: #64748b;
+  }
+  .choice-btn.selected .choice-letter { background: #6366f1; color: #fff; }
+  .choice-btn.correct .choice-letter { background: #10b981; color: #fff; }
+  .choice-btn.wrong .choice-letter { background: #ef4444; color: #fff; }
+  .choice-btn.reveal-correct .choice-letter { background: #10b981; color: #fff; }
+
+  /* Matching */
+  .match-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .match-left { flex: 1; padding: 8px 12px; background: #f1f5f9; border-radius: 8px; font-size: 14px; font-weight: 500; }
+  .match-select {
+    flex: 1; padding: 8px 12px; border: 2px solid #e5e7eb; border-radius: 8px;
+    font-size: 14px; background: #fff; cursor: pointer; outline: none;
+    transition: border-color 0.15s;
+  }
+  .match-select:focus { border-color: #6366f1; }
+  .match-select.correct { border-color: #10b981; background: #d1fae5; }
+  .match-select.wrong { border-color: #ef4444; background: #fee2e2; }
+
+  /* Ordering */
+  .order-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 10px;
+    background: #fff; margin-bottom: 6px; cursor: grab;
+    font-size: 14px; transition: all 0.15s; user-select: none;
+  }
+  .order-item:active { cursor: grabbing; }
+  .order-item.dragging { opacity: 0.5; }
+  .order-item.drag-over { border-color: #6366f1; background: #eef2ff; }
+  .order-item.correct { border-color: #10b981; background: #d1fae5; cursor: default; }
+  .order-item.wrong { border-color: #ef4444; background: #fee2e2; cursor: default; }
+  .order-handle { color: #94a3b8; flex-shrink: 0; }
+  .order-num {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border-radius: 50%; background: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; color: #64748b;
+  }
+
+  /* Progress bar */
+  .prog-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg,#6366f1,#8b5cf6); transition: width 0.4s; }
+
+  /* Verdict */
+  .verdict-correct { background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 12px 16px; color: #065f46; }
+  .verdict-wrong { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px; padding: 12px 16px; color: #7f1d1d; }
+
+  /* Result circle */
+  .result-circle {
+    width: 120px; height: 120px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 800;
+    border: 6px solid currentColor;
+  }
+
+  /* Set card */
+  .set-card {
+    background: #fff; border-radius: 14px; border: 1px solid #e5e7eb;
+    padding: 20px 22px; transition: all 0.18s;
+    cursor: pointer;
+  }
+  .set-card:hover { border-color: #6366f1; box-shadow: 0 4px 20px rgba(99,102,241,0.12); transform: translateY(-2px); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="contest-sidebar collapsed" id="sidebar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleSidebar()" title="Mở rộng/Thu gọn">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="sidebar-brand">
+    <div class="flex items-center gap-2 hide-on-collapse">
+      <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center overflow-hidden">
+        <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain"/>
+      </div>
+      <span class="text-white font-bold text-sm leading-tight">Kiểm tra AI</span>
+    </div>
+    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center overflow-hidden" style="display:none" id="sidebarLogoCollapsed">
+      <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain"/>
+    </div>
+  </div>
+  <nav class="p-2 pt-3 flex-1">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pb-1.5 hide-on-collapse">Điều hướng</p>
+    <a href="/" class="sidebar-nav-item">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 11h4m-4 4h2"/></svg>
+      <span class="hide-on-collapse">Kỳ thi</span>
+      <div class="sidebar-tooltip">Kỳ thi</div>
+    </a>
+    <a href="/practice.html" class="sidebar-nav-item active">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      <span class="hide-on-collapse">Ôn luyện</span>
+      <div class="sidebar-tooltip">Ôn luyện</div>
+    </a>
+  </nav>
+  <div class="px-4 py-3 border-t border-gray-100 hide-on-collapse">
+    <p class="text-xs text-gray-400">Powered by FPT IS</p>
+  </div>
+</aside>
+
+<div id="pageContent">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SCREEN 1: List of practice sets                        -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="screenList">
+  <header style="background:linear-gradient(160deg,#312e81,#4338ca 50%,#4f46e5)" class="text-white px-6 py-10">
+    <div class="max-w-3xl mx-auto">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h1 class="text-2xl font-bold">Ôn luyện kiến thức</h1>
+      </div>
+      <p class="text-indigo-200/80 text-sm ml-13">Chọn bộ câu hỏi để kiểm tra và đánh giá năng lực của bạn</p>
+    </div>
+  </header>
+
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <!-- User info bar -->
+    <div id="userBar" class="hidden mb-6 flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-sm" id="listUserAvatar">?</div>
+        <div>
+          <p class="font-semibold text-sm text-gray-800" id="listUserName">-</p>
+          <p class="text-xs text-gray-400" id="listUserOrg"></p>
+        </div>
+      </div>
+      <button onclick="changeUser()" class="text-xs text-indigo-600 hover:underline">Đổi tên</button>
+    </div>
+
+    <!-- User name prompt -->
+    <div id="userPrompt" class="mb-6 bg-white rounded-xl border border-indigo-100 px-5 py-5 shadow-sm">
+      <p class="font-semibold text-gray-700 mb-3">Nhập thông tin của bạn trước khi ôn luyện</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input id="promptName" type="text" placeholder="Họ và tên *" maxlength="80"
+          class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"/>
+        <input id="promptOrg" type="text" placeholder="Đơn vị (tuỳ chọn)" maxlength="120"
+          class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"/>
+        <button onclick="saveUser()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Xác nhận</button>
+      </div>
+      <p id="promptErr" class="text-red-500 text-xs mt-2 hidden">Vui lòng nhập họ và tên</p>
+    </div>
+
+    <!-- Sets grid -->
+    <div id="setsLoading" class="text-center py-16 text-gray-400">
+      <svg class="w-8 h-8 mx-auto mb-3 animate-spin opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Đang tải...
+    </div>
+    <div id="setsGrid" class="grid gap-4 hidden"></div>
+    <div id="setsEmpty" class="hidden text-center py-16 text-gray-400">
+      <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <p class="font-medium">Chưa có bộ ôn tập nào</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SCREEN 2: Active practice session                      -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="screenPractice" class="hidden">
+  <!-- Top bar -->
+  <div class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
+    <button onclick="exitPractice()" class="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <p class="font-bold text-gray-800 text-sm truncate" id="practiceSetName"></p>
+      <p class="text-xs text-gray-400" id="practiceProgress"></p>
+    </div>
+    <div class="prog-bar w-24">
+      <div class="prog-fill" id="practiceProgBar" style="width:0%"></div>
+    </div>
+    <span class="text-xs font-bold text-indigo-600 w-10 text-right" id="practiceScore">0/0</span>
+  </div>
+
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    <!-- Question card -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-xs font-bold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full" id="qBadge">Câu 1</span>
+        <span class="text-xs text-gray-400" id="qTypeBadge"></span>
+      </div>
+      <h2 class="font-semibold text-gray-800 text-base leading-relaxed mb-2" id="qTitle"></h2>
+      <p class="text-sm text-gray-500 leading-relaxed mb-5" id="qDesc"></p>
+
+      <!-- Choices: single / multiple -->
+      <div id="choicesArea" class="space-y-2"></div>
+
+      <!-- Matching -->
+      <div id="matchArea" class="hidden"></div>
+
+      <!-- Ordering -->
+      <div id="orderArea" class="hidden">
+        <p class="text-xs text-gray-400 mb-3">Kéo thả hoặc dùng nút ↑↓ để sắp xếp theo đúng thứ tự</p>
+        <div id="orderList"></div>
+      </div>
+    </div>
+
+    <!-- Verdict -->
+    <div id="verdictArea" class="mb-4 hidden"></div>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <button id="btnCheck" onclick="checkAnswer()"
+        class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition text-sm">
+        Kiểm tra
+      </button>
+      <button id="btnNext" onclick="nextQuestion()"
+        class="hidden flex-1 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-900 transition text-sm">
+        Câu tiếp theo
+      </button>
+      <button id="btnFinish" onclick="finishPractice()"
+        class="hidden flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition text-sm">
+        Hoàn thành
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SCREEN 3: Results                                      -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="screenResult" class="hidden">
+  <div class="max-w-2xl mx-auto px-4 py-10">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center mb-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-6">Kết quả ôn luyện</h2>
+      <div class="flex justify-center mb-6">
+        <div class="result-circle" id="resultCircle">
+          <span id="resultPct">0%</span>
+          <span class="text-sm font-semibold mt-1" id="resultFraction">0/0</span>
+        </div>
+      </div>
+      <div class="inline-block px-5 py-2 rounded-full text-sm font-bold mb-2" id="resultLevelBadge">-</div>
+      <p class="text-gray-500 text-sm" id="resultSetName"></p>
+    </div>
+
+    <!-- Per-question review -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+      <h3 class="font-bold text-gray-700 mb-4">Chi tiết từng câu</h3>
+      <div id="reviewList" class="space-y-3"></div>
+    </div>
+
+    <div class="flex gap-3">
+      <button onclick="retryPractice()" class="flex-1 py-3 border-2 border-indigo-200 text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition text-sm">
+        Làm lại
+      </button>
+      <button onclick="showScreen('list')" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition text-sm">
+        Chọn bộ khác
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /pageContent -->
+
+<script>
+// ── Sidebar ──────────────────────────────────────────────
+let sidebarExpanded = false;
+function toggleSidebar() {
+  sidebarExpanded = !sidebarExpanded;
+  document.getElementById('sidebar').classList.toggle('collapsed', !sidebarExpanded);
+  document.getElementById('pageContent').classList.toggle('sidebar-expanded', sidebarExpanded);
+}
+
+// ── State ─────────────────────────────────────────────────
+let userName = localStorage.getItem('practiceUserName') || '';
+let userOrg  = localStorage.getItem('practiceUserOrg') || '';
+let currentSet = null;      // { id, name, questions, scoring_scale }
+let currentQIdx = 0;
+let answers = [];            // [{ questionId, isCorrect, userAnswer, correctAnswer, explanation, questionType }]
+let selectedAnswer = null;
+let answered = false;
+let orderData = [];          // current ordering state
+
+// ── Screens ───────────────────────────────────────────────
+function showScreen(name) {
+  document.getElementById('screenList').classList.toggle('hidden', name !== 'list');
+  document.getElementById('screenPractice').classList.toggle('hidden', name !== 'practice');
+  document.getElementById('screenResult').classList.toggle('hidden', name !== 'result');
+  if (name === 'list') loadSets();
+}
+
+// ── User management ───────────────────────────────────────
+function updateUserUI() {
+  if (userName) {
+    document.getElementById('userPrompt').classList.add('hidden');
+    document.getElementById('userBar').classList.remove('hidden');
+    document.getElementById('listUserAvatar').textContent = userName.charAt(0).toUpperCase();
+    document.getElementById('listUserName').textContent = userName;
+    document.getElementById('listUserOrg').textContent = userOrg || '';
+  } else {
+    document.getElementById('userPrompt').classList.remove('hidden');
+    document.getElementById('userBar').classList.add('hidden');
+  }
+}
+
+function saveUser() {
+  const n = document.getElementById('promptName').value.trim();
+  if (!n) { document.getElementById('promptErr').classList.remove('hidden'); return; }
+  document.getElementById('promptErr').classList.add('hidden');
+  userName = n;
+  userOrg = document.getElementById('promptOrg').value.trim();
+  localStorage.setItem('practiceUserName', userName);
+  localStorage.setItem('practiceUserOrg', userOrg);
+  updateUserUI();
+}
+
+function changeUser() {
+  document.getElementById('promptName').value = userName;
+  document.getElementById('promptOrg').value = userOrg;
+  userName = ''; userOrg = '';
+  updateUserUI();
+}
+
+// ── Load practice sets ────────────────────────────────────
+async function loadSets() {
+  document.getElementById('setsLoading').classList.remove('hidden');
+  document.getElementById('setsGrid').classList.add('hidden');
+  document.getElementById('setsEmpty').classList.add('hidden');
+
+  const res = await fetch('/api/practice');
+  const sets = await res.json();
+
+  document.getElementById('setsLoading').classList.add('hidden');
+  if (!sets.length) { document.getElementById('setsEmpty').classList.remove('hidden'); return; }
+
+  const grid = document.getElementById('setsGrid');
+  grid.innerHTML = sets.map(s => `
+    <div class="set-card" onclick="startPractice('${s.id}')">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <h3 class="font-bold text-gray-800 text-base mb-1">${escHtml(s.name)}</h3>
+          ${s.description ? `<p class="text-sm text-gray-500 leading-relaxed">${escHtml(s.description)}</p>` : ''}
+        </div>
+        <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-50 flex flex-col items-center justify-center">
+          <span class="text-lg font-black text-indigo-600">${s.questionCount}</span>
+          <span class="text-[10px] text-indigo-400 font-medium">câu</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  grid.classList.remove('hidden');
+}
+
+// ── Start practice ────────────────────────────────────────
+async function startPractice(setId) {
+  if (!userName) {
+    document.getElementById('userPrompt').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('promptName').focus();
+    return;
+  }
+
+  const res = await fetch(`/api/practice/${setId}`);
+  if (!res.ok) { alert('Không thể tải bộ ôn tập'); return; }
+  currentSet = await res.json();
+
+  currentQIdx = 0;
+  answers = [];
+  showScreen('practice');
+  renderQuestion();
+}
+
+// ── Render question ───────────────────────────────────────
+function renderQuestion() {
+  const q = currentSet.questions[currentQIdx];
+  const total = currentSet.questions.length;
+  const done  = answers.filter(a => a.isCorrect).length;
+
+  document.getElementById('practiceSetName').textContent = currentSet.name;
+  document.getElementById('practiceProgress').textContent = `Câu ${currentQIdx + 1} / ${total}`;
+  document.getElementById('practiceProgBar').style.width = `${(currentQIdx / total) * 100}%`;
+  document.getElementById('practiceScore').textContent = `${done}/${total}`;
+  document.getElementById('qBadge').textContent = `Câu ${currentQIdx + 1}`;
+
+  const typeLabels = { single: 'Chọn một', multiple: 'Chọn nhiều', matching: 'Nối đôi', ordering: 'Sắp xếp' };
+  document.getElementById('qTypeBadge').textContent = typeLabels[q.question_type] || '';
+  document.getElementById('qTitle').textContent = q.title;
+  document.getElementById('qDesc').textContent = q.description || '';
+
+  selectedAnswer = null;
+  answered = false;
+  orderData = [];
+
+  document.getElementById('verdictArea').classList.add('hidden');
+  document.getElementById('verdictArea').innerHTML = '';
+  document.getElementById('btnCheck').classList.remove('hidden');
+  document.getElementById('btnNext').classList.add('hidden');
+  document.getElementById('btnFinish').classList.add('hidden');
+
+  // Hide all answer areas
+  document.getElementById('choicesArea').classList.add('hidden');
+  document.getElementById('matchArea').classList.add('hidden');
+  document.getElementById('orderArea').classList.add('hidden');
+
+  if (q.question_type === 'single') {
+    renderSingle(q);
+  } else if (q.question_type === 'multiple') {
+    renderMultiple(q);
+  } else if (q.question_type === 'matching') {
+    renderMatching(q);
+  } else if (q.question_type === 'ordering') {
+    renderOrdering(q);
+  }
+}
+
+// ── Single choice ─────────────────────────────────────────
+function renderSingle(q) {
+  selectedAnswer = null;
+  const area = document.getElementById('choicesArea');
+  area.classList.remove('hidden');
+  const letters = 'ABCDEFGHIJ';
+  area.innerHTML = (q.choices || []).map((c, i) => `
+    <button class="choice-btn" id="choice-${i}" onclick="selectSingle(${i})">
+      <span class="choice-letter">${letters[i]}</span>
+      <span>${escHtml(c)}</span>
+    </button>
+  `).join('');
+}
+
+function selectSingle(i) {
+  if (answered) return;
+  if (selectedAnswer !== null) {
+    document.getElementById(`choice-${selectedAnswer}`)?.classList.remove('selected');
+  }
+  selectedAnswer = i;
+  document.getElementById(`choice-${i}`).classList.add('selected');
+}
+
+// ── Multiple choice ───────────────────────────────────────
+function renderMultiple(q) {
+  selectedAnswer = [];
+  const area = document.getElementById('choicesArea');
+  area.classList.remove('hidden');
+  const letters = 'ABCDEFGHIJ';
+  area.innerHTML = (q.choices || []).map((c, i) => `
+    <button class="choice-btn" id="choice-${i}" onclick="toggleMultiple(${i})">
+      <span class="choice-letter">${letters[i]}</span>
+      <span>${escHtml(c)}</span>
+    </button>
+  `).join('');
+}
+
+function toggleMultiple(i) {
+  if (answered) return;
+  const idx = selectedAnswer.indexOf(i);
+  if (idx === -1) {
+    selectedAnswer.push(i);
+    document.getElementById(`choice-${i}`).classList.add('selected');
+  } else {
+    selectedAnswer.splice(idx, 1);
+    document.getElementById(`choice-${i}`).classList.remove('selected');
+  }
+}
+
+// ── Matching ──────────────────────────────────────────────
+function renderMatching(q) {
+  const area = document.getElementById('matchArea');
+  area.classList.remove('hidden');
+  const choices = q.choices || [];
+  const options = q.match_options || [];
+  selectedAnswer = new Array(choices.length).fill('');
+
+  area.innerHTML = choices.map((c, i) => `
+    <div class="match-row">
+      <div class="match-left">${escHtml(c)}</div>
+      <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      <select class="match-select" id="match-${i}" onchange="updateMatch(${i}, this.value)">
+        <option value="">-- Chọn --</option>
+        ${options.map(o => `<option value="${escAttr(o)}">${escHtml(o)}</option>`).join('')}
+      </select>
+    </div>
+  `).join('');
+}
+
+function updateMatch(i, val) {
+  if (answered) return;
+  selectedAnswer[i] = val;
+}
+
+// ── Ordering ──────────────────────────────────────────────
+function renderOrdering(q) {
+  const area = document.getElementById('orderArea');
+  area.classList.remove('hidden');
+  // Shuffle choices for ordering
+  const choices = [...(q.choices || [])];
+  orderData = shuffle([...choices]);
+  selectedAnswer = orderData;
+  renderOrderList(false);
+}
+
+function renderOrderList(locked) {
+  const list = document.getElementById('orderList');
+  list.innerHTML = orderData.map((item, i) => `
+    <div class="order-item ${locked ? '' : ''}" id="order-item-${i}"
+      draggable="${!locked}"
+      ondragstart="dragStart(event,${i})"
+      ondragover="dragOver(event,${i})"
+      ondrop="dropItem(event,${i})"
+      ondragend="dragEnd(event)">
+      <span class="order-handle">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+      </span>
+      <span class="order-num">${i + 1}</span>
+      <span class="flex-1 text-sm">${escHtml(item)}</span>
+      ${!locked ? `
+      <div class="flex flex-col gap-0.5">
+        <button onclick="moveOrderItem(${i},-1)" class="text-gray-300 hover:text-gray-600 transition" ${i===0?'disabled':''}>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"/></svg>
+        </button>
+        <button onclick="moveOrderItem(${i},1)" class="text-gray-300 hover:text-gray-600 transition" ${i===orderData.length-1?'disabled':''}>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+// Drag-and-drop for ordering
+let dragIdx = null;
+function dragStart(e, i) { dragIdx = i; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => document.getElementById(`order-item-${i}`)?.classList.add('dragging'), 0); }
+function dragOver(e, i) { e.preventDefault(); document.getElementById(`order-item-${i}`)?.classList.add('drag-over'); }
+function dropItem(e, i) {
+  e.preventDefault();
+  if (dragIdx === null || dragIdx === i) return;
+  const item = orderData.splice(dragIdx, 1)[0];
+  orderData.splice(i, 0, item);
+  selectedAnswer = orderData;
+  renderOrderList(false);
+}
+function dragEnd(e) {
+  dragIdx = null;
+  document.querySelectorAll('.order-item').forEach(el => { el.classList.remove('dragging', 'drag-over'); });
+}
+function moveOrderItem(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= orderData.length) return;
+  [orderData[i], orderData[j]] = [orderData[j], orderData[i]];
+  selectedAnswer = orderData;
+  renderOrderList(false);
+}
+
+// ── Check answer ──────────────────────────────────────────
+async function checkAnswer() {
+  const q = currentSet.questions[currentQIdx];
+  const qType = q.question_type || 'single';
+
+  // Validate
+  if (qType === 'single' && selectedAnswer === null) {
+    return alert('Vui lòng chọn một đáp án');
+  }
+  if (qType === 'multiple' && (!selectedAnswer || !selectedAnswer.length)) {
+    return alert('Vui lòng chọn ít nhất một đáp án');
+  }
+  if (qType === 'matching' && selectedAnswer.some(v => !v)) {
+    return alert('Vui lòng nối tất cả các mục');
+  }
+  if (qType === 'ordering' && (!orderData || !orderData.length)) {
+    return alert('Vui lòng sắp xếp các mục');
+  }
+
+  const body = { questionId: q.id, answerIndex: selectedAnswer, answer: selectedAnswer };
+  const res = await fetch(`/api/practice/${currentSet.id}/check`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const result = await res.json();
+  answered = true;
+
+  // Save answer record
+  answers.push({
+    questionId: q.id,
+    title: q.title,
+    isCorrect: result.correct,
+    userAnswer: selectedAnswer,
+    correctAnswer: result.correctAnswer,
+    explanation: result.explanation,
+    questionType: qType,
+    choices: q.choices
+  });
+
+  showVerdict(result, q, qType);
+  highlightAnswers(result, q, qType);
+  updateProgressBar();
+
+  document.getElementById('btnCheck').classList.add('hidden');
+  const isLast = currentQIdx >= currentSet.questions.length - 1;
+  if (isLast) {
+    document.getElementById('btnFinish').classList.remove('hidden');
+  } else {
+    document.getElementById('btnNext').classList.remove('hidden');
+  }
+}
+
+function showVerdict(result, q, qType) {
+  const area = document.getElementById('verdictArea');
+  area.classList.remove('hidden');
+  const icon = result.correct
+    ? `<svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`
+    : `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`;
+  const cls = result.correct ? 'verdict-correct' : 'verdict-wrong';
+  const title = result.correct ? 'Chính xác!' : 'Chưa đúng';
+
+  let correctHtml = '';
+  if (!result.correct) {
+    if (qType === 'single') {
+      const letters = 'ABCDEFGHIJ';
+      correctHtml = `<p class="text-xs mt-1">Đáp án đúng: <strong>${letters[result.correctAnswer]}</strong></p>`;
+    } else if (qType === 'multiple') {
+      const letters = 'ABCDEFGHIJ';
+      const ca = (result.correctAnswer || []).map(i => letters[i]).join(', ');
+      correctHtml = `<p class="text-xs mt-1">Đáp án đúng: <strong>${ca}</strong></p>`;
+    } else if (qType === 'ordering') {
+      correctHtml = `<p class="text-xs mt-1">Thứ tự đúng: <strong>${(result.correctAnswer || []).map(escHtml).join(' → ')}</strong></p>`;
+    }
+  }
+
+  const expHtml = result.explanation
+    ? `<p class="text-xs mt-2 opacity-80">💡 ${escHtml(result.explanation)}</p>`
+    : '';
+
+  area.innerHTML = `<div class="${cls}"><div class="flex items-center gap-2 font-semibold text-sm">${icon}${title}</div>${correctHtml}${expHtml}</div>`;
+}
+
+function highlightAnswers(result, q, qType) {
+  if (qType === 'single') {
+    const btn = document.getElementById(`choice-${selectedAnswer}`);
+    if (btn) { btn.classList.remove('selected'); btn.classList.add(result.correct ? 'correct' : 'wrong'); btn.disabled = true; }
+    if (!result.correct) {
+      const cb = document.getElementById(`choice-${result.correctAnswer}`);
+      if (cb) { cb.classList.add('reveal-correct'); cb.disabled = true; }
+    }
+    document.querySelectorAll('.choice-btn').forEach(b => { b.disabled = true; });
+  } else if (qType === 'multiple') {
+    document.querySelectorAll('.choice-btn').forEach((b, i) => {
+      b.classList.remove('selected');
+      const inUser = selectedAnswer.includes(i);
+      const inCorrect = (result.correctAnswer || []).includes(i);
+      if (inUser && inCorrect) b.classList.add('correct');
+      else if (inUser && !inCorrect) b.classList.add('wrong');
+      else if (!inUser && inCorrect) b.classList.add('reveal-correct');
+      b.disabled = true;
+    });
+  } else if (qType === 'matching') {
+    document.querySelectorAll('.match-select').forEach((sel, i) => {
+      const ua = selectedAnswer[i];
+      const ca = (result.correctAnswer || [])[i];
+      sel.classList.add(ua === ca ? 'correct' : 'wrong');
+      sel.disabled = true;
+    });
+  } else if (qType === 'ordering') {
+    const correct = result.correctAnswer || [];
+    document.querySelectorAll('.order-item').forEach((el, i) => {
+      el.classList.add(orderData[i] === correct[i] ? 'correct' : 'wrong');
+      el.draggable = false;
+    });
+  }
+}
+
+function updateProgressBar() {
+  const total = currentSet.questions.length;
+  const done  = answers.filter(a => a.isCorrect).length;
+  document.getElementById('practiceScore').textContent = `${done}/${total}`;
+  document.getElementById('practiceProgBar').style.width = `${((currentQIdx + 1) / total) * 100}%`;
+}
+
+// ── Navigation ────────────────────────────────────────────
+function nextQuestion() {
+  currentQIdx++;
+  renderQuestion();
+}
+
+function exitPractice() {
+  if (answers.length > 0 && !confirm('Bạn có chắc muốn thoát? Kết quả sẽ không được lưu.')) return;
+  showScreen('list');
+}
+
+// ── Finish & Save ─────────────────────────────────────────
+async function finishPractice() {
+  const score = answers.filter(a => a.isCorrect).length;
+  const total = currentSet.questions.length;
+
+  const res = await fetch(`/api/practice/${currentSet.id}/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userName, organization: userOrg, score, total, answers })
+  });
+  const data = await res.json();
+  showResult(data, score, total);
+}
+
+// ── Show result ───────────────────────────────────────────
+function showResult(data, score, total) {
+  showScreen('result');
+  const pct = Math.round((score / total) * 100);
+  const level = data.level || { label: '-', color: '#6366f1' };
+
+  const circle = document.getElementById('resultCircle');
+  circle.style.color = level.color;
+  circle.style.borderColor = level.color;
+  document.getElementById('resultPct').textContent = `${pct}%`;
+  document.getElementById('resultFraction').textContent = `${score}/${total}`;
+
+  const badge = document.getElementById('resultLevelBadge');
+  badge.textContent = level.label;
+  badge.style.background = level.color + '20';
+  badge.style.color = level.color;
+
+  document.getElementById('resultSetName').textContent = currentSet.name;
+
+  // Review list
+  const list = document.getElementById('reviewList');
+  list.innerHTML = answers.map((a, i) => {
+    const icon = a.isCorrect
+      ? `<div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>`
+      : `<div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0"><svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg></div>`;
+    return `
+      <div class="flex items-start gap-3 p-3 rounded-xl ${a.isCorrect ? 'bg-emerald-50' : 'bg-red-50'}">
+        ${icon}
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-700 leading-snug">Câu ${i + 1}: ${escHtml(a.title)}</p>
+          ${a.explanation ? `<p class="text-xs text-gray-500 mt-0.5">💡 ${escHtml(a.explanation)}</p>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function retryPractice() {
+  startPractice(currentSet.id);
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return escHtml(s); }
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ── Init ──────────────────────────────────────────────────
+updateUserUI();
+showScreen('list');
+</script>
+</body>
+</html>
