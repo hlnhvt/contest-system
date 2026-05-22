@@ -460,16 +460,16 @@ body { overflow-x: hidden; }
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
   </button>
   <!-- Brand -->
-  <div class="sidebar-brand">
+  <a href="/" class="sidebar-brand block hover:brightness-110 transition-all" style="text-decoration:none">
     <div class="flex items-center gap-2 mb-3">
       <div class="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center overflow-hidden flex-shrink-0">
         <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain"/>
       </div>
-      <span class="text-white/70 text-xs font-semibold uppercase tracking-wider hide-on-collapse">Kiểm tra AI</span>
+      <span class="text-white/70 text-xs font-semibold uppercase tracking-wider hide-on-collapse">FIS GS</span>
     </div>
     <h2 class="font-bold text-white text-sm leading-tight hide-on-collapse" id="contestName">Đang tải...</h2>
     <p class="text-white/55 text-xs mt-1.5 leading-relaxed hide-on-collapse" id="contestDesc"></p>
-  </div>
+  </a>
 
   <!-- Navigation -->
   <nav class="p-2 pt-3 flex-1">
@@ -484,19 +484,16 @@ body { overflow-x: hidden; }
       <span class="hide-on-collapse">Câu hỏi</span>
       <div class="sidebar-tooltip">Câu hỏi</div>
     </button>
+    <button id="tab-org-ranking" onclick="showTab('org-ranking')" class="sidebar-nav-item">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="hide-on-collapse">Xếp hạng đơn vị</span>
+      <div class="sidebar-tooltip">Xếp hạng đơn vị</div>
+    </button>
   </nav>
 
-  <!-- Contest time info -->
-  <div class="px-4 py-3 border-t border-gray-100 space-y-2.5 hide-on-collapse">
-    <div>
-      <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Bắt đầu</p>
-      <p class="text-xs text-gray-700 font-medium" id="contestStartDisplay">—</p>
-    </div>
-    <div>
-      <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Kết thúc</p>
-      <p class="text-xs text-gray-700 font-medium" id="contestEndDisplay">—</p>
-    </div>
-  </div>
+  <!-- Hidden elements to keep JS references working -->
+  <span id="contestStartDisplay" class="hidden"></span>
+  <span id="contestEndDisplay" class="hidden"></span>
 
   <!-- User + back link -->
   <div class="px-4 py-3 border-t border-gray-100 hide-on-collapse">
@@ -570,10 +567,10 @@ body { overflow-x: hidden; }
   <div id="pane-scoreboard">
     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
       <div class="flex items-center gap-4 flex-wrap">
-        <div class="legend"><div class="legend-sq" style="background:#1b6b3a"></div> First solve</div>
-        <div class="legend"><div class="legend-sq" style="background:#86efac;border:1px solid #6ee7b7"></div> Solved</div>
-        <div class="legend"><div class="legend-sq" style="background:#b83c2b"></div> Wrong</div>
-        <div class="legend"><div class="legend-sq" style="background:#bfdbfe;border:1px solid #93c5fd"></div> Pending</div>
+        <div class="legend"><div class="legend-sq" style="background:#1b6b3a"></div> Chính xác đầu tiên</div>
+        <div class="legend"><div class="legend-sq" style="background:#86efac;border:1px solid #6ee7b7"></div> Chính xác</div>
+        <div class="legend"><div class="legend-sq" style="background:#b83c2b"></div> Không đúng</div>
+        <div class="legend"><div class="legend-sq" style="background:#bfdbfe;border:1px solid #93c5fd"></div> Đóng băng</div>
       </div>
       <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
         <div class="rt-dot"></div> Realtime
@@ -595,9 +592,11 @@ body { overflow-x: hidden; }
         </table>
       </div>
     </div>
-    <p class="text-xs text-gray-400 mt-2 pl-1">
-      Số trên ô = số lần nộp · Số dưới = thời gian (phút) · Ô xanh dương = chờ công bố · Nhấn tiêu đề cột để xem câu hỏi
-    </p>
+    <div class="mt-2 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+      <svg class="w-3.5 h-3.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span><strong>Mẹo:</strong> Nhấn vào tiêu đề cột (A, B, C…) để xem đề bài và nộp đáp án trực tiếp · Số trên ô = số lần nộp · Số dưới = thời gian (phút) · Ô xanh dương = chờ công bố</span>
+    </div>
+
   </div>
 
   <!-- PROBLEMS TAB -->
@@ -607,6 +606,27 @@ body { overflow-x: hidden; }
       <div id="problemPagination"></div>
     </div>
   </div>
+
+  <!-- ORG RANKING TAB -->
+  <div id="pane-org-ranking" class="hidden">
+    <div class="mb-3 flex items-start gap-2 text-sm text-gray-500">
+      <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Xếp hạng theo <strong class="text-gray-700">trung bình câu giải / người</strong> để đảm bảo công bằng giữa các đơn vị đông và ít nhân viên. Tỉ lệ giải = tổng câu giải / (số người × số câu thi).</span>
+    </div>
+    <div class="rounded-xl overflow-hidden shadow-md border border-gray-200">
+      <div class="overflow-x-auto">
+        <table class="scoreboard" id="orgRankingTable">
+          <thead><tr id="orgRankingHead"></tr></thead>
+          <tbody id="orgRankingBody">
+            <tr><td colspan="7" class="text-center text-gray-400 py-12 text-sm">Đang tải...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Per-problem solve-rate stats -->
+    <div id="scoreboardStats" class="mt-5"></div>
+  </div>
+
 </main>
 
 <!-- MCQ MODAL -->
@@ -652,16 +672,74 @@ body { overflow-x: hidden; }
 
 <!-- EVALUATION MODAL -->
 <div id="evaluationModal" class="modal-overlay hidden" onclick="handleEvalOverlayClick(event)">
-  <div class="modal-box max-w-sm p-7 text-center">
-    <h2 class="text-xl font-bold text-gray-800 mb-6">Đánh giá năng lực</h2>
-    <div class="flex justify-center mb-6">
-      <div class="result-circle" id="evalResultCircle">
-        <span id="evalResultPct">0%</span>
-        <span class="text-sm font-semibold mt-1" id="evalResultFraction">0/0</span>
+  <div class="modal-box max-w-lg p-0 overflow-hidden">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1b4332 0%,#065f46 60%,#059669 100%)" class="px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        </div>
+        <h2 class="text-base font-bold text-white">Đánh giá năng lực</h2>
+      </div>
+      <button onclick="document.getElementById('evaluationModal').classList.add('hidden')"
+        class="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-5 overflow-y-auto" style="max-height:80vh">
+      <!-- Score row: weighted circle + raw score + level badge -->
+      <div class="flex items-center gap-5">
+        <!-- Weighted donut -->
+        <div class="relative flex-shrink-0">
+          <svg viewBox="0 0 36 36" style="width:88px;height:88px;transform:rotate(-90deg)">
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" stroke-width="3.5"/>
+            <circle cx="18" cy="18" r="15.9" fill="none" id="evalDonutArc"
+              stroke="#10b981" stroke-width="3.5" stroke-dasharray="0 100" stroke-linecap="round"
+              style="transition:stroke-dasharray 0.8s ease"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <span id="evalWPct" class="text-xl font-extrabold leading-none" style="color:#10b981">0%</span>
+            <span class="text-[9px] text-gray-400 font-medium mt-0.5">có trọng số</span>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="flex-1 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500">Số câu đúng</span>
+            <span class="font-extrabold text-gray-800 text-sm" id="evalFraction">—</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500">Tỉ lệ thô</span>
+            <span class="font-bold text-gray-600 text-sm" id="evalRawPct">—</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500">Xếp loại</span>
+            <span id="evalLevelBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Difficulty breakdown -->
+      <div id="evalBreakdown" class="space-y-2"></div>
+
+      <!-- Evaluation paragraph -->
+      <div class="bg-gray-50 border border-gray-100 rounded-xl p-4">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nhận xét chi tiết</p>
+        <div id="evalText" class="text-sm text-gray-700 leading-relaxed [&_p]:leading-relaxed [&_ul]:text-sm [&_li]:leading-relaxed"></div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="evalLoading" class="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm hidden">
+        <div class="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        Đang tải đánh giá...
       </div>
     </div>
-    <div class="inline-block px-5 py-2 rounded-full text-sm font-bold mb-6" id="evalResultLevelBadge">-</div>
-    <button onclick="document.getElementById('evaluationModal').classList.add('hidden')" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition">Đóng</button>
+
+    <div class="px-6 py-4 border-t border-gray-100">
+      <button onclick="document.getElementById('evaluationModal').classList.add('hidden')"
+        class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition text-sm">Đóng</button>
+    </div>
   </div>
 </div>
 
@@ -772,7 +850,10 @@ async function loadScoreboard(updatedParticipantId) {
   lastScoreboardHash = newHash;
 
   scoreboard = data;
-  if (changed) renderScoreboard(updatedParticipantId);
+  if (changed) {
+    renderScoreboard(updatedParticipantId);
+    if (!document.getElementById('pane-problems').classList.contains('hidden')) renderProblems();
+  }
 }
 
 function renderScoreboard(flashParticipantId) {
@@ -808,6 +889,7 @@ function renderScoreboard(flashParticipantId) {
   let currentRank = 1;
   let displayRank = 1;
 
+  renderScoreboardStats(qs, rows);
   body.innerHTML = rows.map((row, idx) => {
     if (idx > 0) {
       const prev = rows[idx - 1];
@@ -888,7 +970,10 @@ function renderProblems() {
     return;
   }
 
-  const total = questions.length;
+  const { rows } = scoreboard;
+  const myRow   = rows?.find(r => r.participantId === myParticipantId);
+  const total   = questions.length;
+  const sbTotal = rows?.length || 0;
   const totalPages = Math.max(1, Math.ceil(total / problemPageSize));
   if (currentProblemPage > totalPages) currentProblemPage = totalPages;
   if (currentProblemPage < 1) currentProblemPage = 1;
@@ -899,15 +984,48 @@ function renderProblems() {
 
   if (container) container.innerHTML = pageItems.map((q, idx) => {
     const absIdx = startIdx + idx;
+    const r = myRow?.questions?.[q.label];
+
+    let statusBadge, leftBorder;
+    if (!myRow) {
+      statusBadge = '';
+      leftBorder  = '';
+    } else if (r?.solved) {
+      statusBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        Đã giải · ${r.time}m${r.attempts > 1 ? ` · ${r.attempts} lần` : ''}
+      </span>`;
+      leftBorder  = 'border-l-4 border-emerald-400';
+    } else if (r?.attempts > 0) {
+      statusBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+        Chưa đúng · ${r.attempts} lần
+      </span>`;
+      leftBorder  = 'border-l-4 border-red-400';
+    } else {
+      statusBadge = `<span class="text-[11px] text-gray-400 italic">Chưa trả lời</span>`;
+      leftBorder  = 'border-l-4 border-gray-200';
+    }
+
+    const solvedCount = rows?.filter(row => row.questions?.[q.label]?.solved).length || 0;
+    const pct = sbTotal > 0 ? Math.round(solvedCount / sbTotal * 100) : 0;
+    const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+
     return `
-    <div onclick="openProblem('${esc(q.label)}')" class="p-4 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-4">
+    <div onclick="openProblem('${esc(q.label)}')" class="flex items-center gap-4 px-4 py-4 hover:bg-emerald-50 cursor-pointer transition-colors ${leftBorder}">
       <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-gradient-to-br ${GRAD_COLORS[absIdx%GRAD_COLORS.length]} flex items-center justify-center text-white font-bold text-lg shadow-sm">${esc(q.label)}</div>
       <div class="flex-1 min-w-0">
         <h3 class="font-bold text-gray-900 text-sm truncate">${esc(q.title)}</h3>
-        <p class="text-xs text-gray-500 mt-0.5 truncate">${esc(q.description ? q.description.slice(0, 80) + '...' : 'Nhấn để xem chi tiết câu hỏi')}</p>
+        <div class="flex items-center gap-3 mt-1 flex-wrap">
+          ${statusBadge}
+        </div>
       </div>
-      <div class="flex-shrink-0 text-emerald-600 text-xs font-semibold bg-emerald-100/50 px-3 py-1.5 rounded-full border border-emerald-100">
-        Trả lời →
+      <div class="flex-shrink-0 text-right min-w-[64px]">
+        <div class="text-sm font-extrabold" style="color:${barColor}">${solvedCount}/${sbTotal}</div>
+        <div class="w-full bg-gray-100 rounded-full h-1 mt-1 overflow-hidden">
+          <div class="h-1 rounded-full" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <div class="text-[10px] text-gray-400 mt-0.5">đã giải</div>
       </div>
     </div>`;
   }).join('');
@@ -1134,7 +1252,11 @@ function dragLeave(e, i) { e.currentTarget.classList.remove('drag-over'); }
 function dragDrop(e, i)  {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
-  if (dragSrcIdx === null || dragSrcIdx === i) return;
+  if (dragSrcIdx === null || dragSrcIdx === i) {
+    document.querySelectorAll('.order-item').forEach(el => el.classList.remove('dragging', 'drag-over'));
+    dragSrcIdx = null;
+    return;
+  }
   const arr = selectedAnswer;
   const [moved] = arr.splice(dragSrcIdx, 1);
   arr.splice(i, 0, moved);
@@ -1154,6 +1276,7 @@ function reRenderOrderItems() {
   selectedAnswer.forEach((text, i) => {
     const el = items[i];
     if (!el) return;
+    el.classList.remove('dragging', 'drag-over');
     el.setAttribute('ondragstart', `dragStart(event,${i})`);
     el.setAttribute('ondragover',  `dragOver(event,${i})`);
     el.setAttribute('ondragleave', `dragLeave(event,${i})`);
@@ -1308,10 +1431,12 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 // ── Tabs ──────────────────────────────────────
 function showTab(tab) {
-  ['scoreboard','problems'].forEach(t => {
+  ['scoreboard','problems','org-ranking'].forEach(t => {
     document.getElementById(`pane-${t}`).classList.toggle('hidden', t !== tab);
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
   });
+  if (tab === 'org-ranking') { renderOrgRanking(); renderScoreboardStats(scoreboard.questions, scoreboard.rows); }
+  if (tab === 'problems') renderProblems();
   // Close mobile menu after selecting a tab
   const sidebar = document.getElementById('contestSidebar');
   const backdrop = document.getElementById('mobileBackdrop');
@@ -1417,6 +1542,212 @@ function fmtMs(ms) {
   return (h>0 ? h+':' : '') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
+// ── Scoreboard per-problem stats row ──────────
+function renderScoreboardStats(qs, rows) {
+  const el = document.getElementById('scoreboardStats');
+  if (!el || !qs?.length) { if (el) el.innerHTML = ''; return; }
+  const total = rows?.length || 0;
+  if (total === 0) { el.innerHTML = ''; return; }
+
+  const labelColors = ['#2563eb','#7c3aed','#059669','#d97706','#e11d48','#0891b2','#be185d','#65a30d'];
+
+  const totalSolved = rows.filter(r => Object.values(r.questions||{}).some(q => q.solved)).length;
+  const avgPct = qs.length ? Math.round(
+    qs.reduce((sum, q) => sum + rows.filter(r => r.questions?.[q.label]?.solved).length, 0) / (qs.length * total) * 100
+  ) : 0;
+
+  const cards = qs.map((q, idx) => {
+    const solved = rows.filter(r => r.questions?.[q.label]?.solved).length;
+    const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+    const trackColor = pct >= 70 ? '#bbf7d0' : pct >= 40 ? '#fde68a' : '#fecaca';
+    const fillColor  = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+    const labelBg    = labelColors[idx % labelColors.length];
+    // SVG donut: r=15.9 → circumference≈100; rotate -90° so arc starts at top
+    const dash = pct.toFixed(1);
+    return `
+    <div style="min-width:110px" class="flex-1 flex flex-col items-center gap-2.5 px-4 py-5 border-r border-gray-100 last:border-r-0 hover:bg-gray-50/60 transition-colors cursor-pointer" onclick="openProblem('${esc(q.label)}')">
+      <span class="text-[11px] font-bold text-white px-2.5 py-0.5 rounded-full" style="background:${labelBg}">${esc(q.label)}</span>
+      <div class="relative">
+        <svg viewBox="0 0 36 36" style="width:68px;height:68px;transform:rotate(-90deg)">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="${trackColor}" stroke-width="3.5"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="${fillColor}" stroke-width="3.5"
+            stroke-dasharray="${dash} 100" stroke-linecap="round" style="transition:stroke-dasharray 0.6s ease"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:13px;font-weight:800;color:${fillColor};line-height:1">${pct}%</span>
+        </div>
+      </div>
+      <div class="text-center leading-tight">
+        <div class="text-sm font-extrabold text-gray-800">${solved}<span class="text-gray-300 font-normal text-xs">/${total}</span></div>
+        <div class="text-[10px] text-gray-400 mt-0.5">thí sinh giải đúng</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+  <div class="rounded-xl overflow-hidden border border-gray-200 shadow-md mt-5">
+    <div style="background:linear-gradient(135deg,#1b4332 0%,#065f46 60%,#047857 100%)" class="px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-emerald-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <span class="text-sm font-bold text-white">Tỉ lệ giải thành công theo câu hỏi</span>
+      </div>
+      <div class="flex items-center gap-3 text-[11px]">
+        <span class="text-emerald-200">Trung bình: <strong class="text-white">${avgPct}%</strong></span>
+        <span class="text-emerald-300/60">·</span>
+        <span class="text-emerald-200">${total} thí sinh</span>
+      </div>
+    </div>
+    <div class="bg-white flex overflow-x-auto">${cards}</div>
+  </div>`;
+}
+
+// ── Org ranking ───────────────────────────────
+function renderOrgRanking() {
+  const { questions: qs, rows } = scoreboard;
+  const head = document.getElementById('orgRankingHead');
+  const body = document.getElementById('orgRankingBody');
+  if (!head || !body) return;
+
+  const numQs = (qs || []).length;
+
+  const orgMap = {};
+  for (const row of (rows || [])) {
+    const org = row.organization?.trim() || '(Không có đơn vị)';
+    if (!orgMap[org]) orgMap[org] = { name: org, members: 0, solved: 0, penaltySum: 0, best: null };
+    const o = orgMap[org];
+    o.members++;
+    o.solved     += row.totalSolved || 0;
+    o.penaltySum += row.totalPenalty || 0;
+    if (!o.best || (row.totalSolved > o.best.solved) || (row.totalSolved === o.best.solved && row.totalPenalty < o.best.penalty)) {
+      o.best = { name: row.nickname, solved: row.totalSolved, penalty: row.totalPenalty };
+    }
+  }
+
+  // Derived metrics
+  const orgs = Object.values(orgMap).map(o => ({
+    ...o,
+    avgSolved:   o.members > 0 ? o.solved / o.members : 0,           // trung bình câu giải/người
+    solveRate:   (numQs > 0 && o.members > 0) ? o.solved / (o.members * numQs) * 100 : 0, // tỉ lệ giải %
+    avgPenalty:  o.members > 0 ? Math.round(o.penaltySum / o.members) : 0,
+  })).sort((a, b) =>
+    Math.abs(b.avgSolved - a.avgSolved) > 0.0001
+      ? b.avgSolved - a.avgSolved
+      : a.avgPenalty - b.avgPenalty
+  );
+
+  head.innerHTML = `
+    <th style="width:44px;text-align:center">RK</th>
+    <th style="min-width:130px;padding:9px 14px">ĐƠN VỊ</th>
+    <th style="width:72px;text-align:center" title="Số thành viên tham gia">NGƯỜI</th>
+    <th style="width:76px;text-align:center" title="Tổng số câu giải được">TỔNG GIẢI</th>
+    <th style="width:100px;text-align:center" title="Trung bình câu giải trên mỗi thành viên — chỉ số xếp hạng chính">TRUNG BÌNH/NGƯỜI ↓</th>
+    <th style="width:84px;text-align:center" title="Tổng câu giải / (số người × số câu thi)">TỈ LỆ GIẢI</th>
+    <th style="min-width:110px;padding:9px 10px" title="Thành viên xuất sắc nhất đơn vị">THÀNH VIÊN XUẤT SẮC NHẤT ĐƠN VỊ</th>`;
+
+  if (!orgs.length) {
+    body.innerHTML = `<tr><td colspan="7" class="text-center text-gray-400 py-14 text-sm">Chưa có dữ liệu</td></tr>`;
+    return;
+  }
+
+  const medals = [
+    '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#f59e0b;color:#fff;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(245,158,11,0.4)">1</span>',
+    '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#94a3b8;color:#fff;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(148,163,184,0.4)">2</span>',
+    '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#cd7c3a;color:#fff;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(205,124,58,0.4)">3</span>',
+  ];
+
+  const maxAvg = orgs[0]?.avgSolved || 1;
+
+  body.innerHTML = orgs.map((org, i) => {
+    const isMyOrg = org.name === (myOrganization?.trim() || '');
+    const rank = i < 3 ? medals[i] : `<span class="rank-cell">${i+1}</span>`;
+    const barW  = maxAvg > 0 ? Math.round(org.avgSolved / maxAvg * 100) : 0;
+    const rateColor = org.solveRate >= 70 ? '#16a34a' : org.solveRate >= 40 ? '#d97706' : '#dc2626';
+
+    return `<tr class="${isMyOrg ? 'my-row' : ''}">
+      <td style="text-align:center;padding:7px 4px">${rank}</td>
+      <td style="padding:7px 14px;font-weight:${isMyOrg?700:600};color:${isMyOrg?'#1d4ed8':'#1e293b'}">
+        ${esc(org.name)}${isMyOrg ? '<span style="font-size:10px;color:#94a3b8;margin-left:4px">(đơn vị bạn)</span>' : ''}
+      </td>
+      <td class="time-cell">${org.members}</td>
+      <td class="time-cell" style="font-weight:600;color:#1e293b">${org.solved}</td>
+      <td style="text-align:center;padding:6px 10px">
+        <div style="font-size:14px;font-weight:800;color:#1a5c2e">${org.avgSolved.toFixed(2)}</div>
+        <div style="margin-top:3px;height:4px;border-radius:2px;background:#e5e7eb;overflow:hidden">
+          <div style="height:100%;border-radius:2px;background:linear-gradient(90deg,#059669,#34d399);width:${barW}%"></div>
+        </div>
+      </td>
+      <td style="text-align:center;padding:6px 10px">
+        <span style="font-size:12px;font-weight:700;color:${rateColor}">${org.solveRate.toFixed(1)}%</span>
+      </td>
+      <td style="padding:6px 10px;font-size:12px;color:#475569">
+        ${org.best ? `<span style="font-weight:600;color:#1e293b">${esc(org.best.name)}</span><span style="color:#94a3b8;margin-left:4px">(${org.best.solved} câu)</span>` : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Question status per-user ──────────────────
+function renderQuestionStatus() {
+  const { questions: qs, rows } = scoreboard;
+  const container = document.getElementById('questionStatusList');
+  if (!container) return;
+
+  if (!qs?.length) {
+    container.innerHTML = '<div class="text-gray-400 text-center py-10 text-sm">Chưa có câu hỏi.</div>';
+    return;
+  }
+
+  const myRow  = rows?.find(r => r.participantId === myParticipantId);
+  const total  = rows?.length || 0;
+
+  container.innerHTML = qs.map((q, idx) => {
+    const r = myRow?.questions?.[q.label];
+    let statusHtml, statusBorder;
+
+    if (!myRow) {
+      statusHtml = '<span class="text-xs text-gray-400 italic">Chưa tham gia kỳ thi</span>';
+      statusBorder = '';
+    } else if (r?.solved) {
+      statusHtml = `<span class="inline-flex items-center gap-1 text-sm font-bold text-emerald-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Đã giải đúng · ${r.time} phút${r.attempts > 1 ? ` · ${r.attempts} lần nộp` : ''}
+      </span>`;
+      statusBorder = 'border-l-4 border-emerald-400';
+    } else if (r?.attempts > 0) {
+      statusHtml = `<span class="inline-flex items-center gap-1 text-sm font-bold text-red-500">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Chưa đúng · ${r.attempts} lần nộp
+      </span>`;
+      statusBorder = 'border-l-4 border-red-400';
+    } else {
+      statusHtml = '<span class="text-xs text-gray-400">Chưa trả lời</span>';
+      statusBorder = 'border-l-4 border-gray-200';
+    }
+
+    const solved = rows?.filter(row => row.questions?.[q.label]?.solved).length || 0;
+    const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+    const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+
+    return `<div onclick="openProblem('${esc(q.label)}')"
+      class="flex items-center gap-4 px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors ${statusBorder} ${idx > 0 ? 'border-t border-t-gray-100' : ''}">
+      <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-gradient-to-br ${GRAD_COLORS[idx%GRAD_COLORS.length]} flex items-center justify-center text-white font-bold text-lg shadow-sm">${esc(q.label)}</div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-gray-900 text-sm truncate">${esc(q.title)}</h3>
+        <div class="mt-1">${statusHtml}</div>
+      </div>
+      <div class="flex-shrink-0 text-right min-w-[70px]">
+        <div class="text-sm font-extrabold" style="color:${barColor}">${solved}/${total}</div>
+        <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+          <div class="h-1.5 rounded-full" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <div class="text-[10px] text-gray-400 mt-0.5">đã giải</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1451,24 +1782,58 @@ function toggleSidebar() {
 })();
 
 async function viewEvaluation() {
+  const modal = document.getElementById('evaluationModal');
+  // Show loading
+  document.getElementById('evalLoading').classList.remove('hidden');
+  document.getElementById('evalBreakdown').innerHTML = '';
+  document.getElementById('evalText').innerHTML = '';
+  document.getElementById('evalWPct').textContent = '…';
+  document.getElementById('evalFraction').textContent = '…';
+  document.getElementById('evalRawPct').textContent = '…';
+  document.getElementById('evalLevelBadge').textContent = '…';
+  document.getElementById('evalDonutArc').setAttribute('stroke-dasharray', '0 100');
+  modal.classList.remove('hidden');
+
   const res = await fetch(`/api/contests/${CONTEST_ID}/evaluation?participantId=${myParticipantId}`);
-  if (!res.ok) { alert('Không thể lấy đánh giá'); return; }
-  const data = await res.json();
-  
-  const circle = document.getElementById('evalResultCircle');
-  const pct = document.getElementById('evalResultPct');
-  const fraction = document.getElementById('evalResultFraction');
-  const badge = document.getElementById('evalResultLevelBadge');
-  
-  circle.style.color = data.level.color;
-  pct.textContent = `${data.pct}%`;
-  fraction.textContent = `${data.score}/${data.total}`;
-  
-  badge.textContent = data.level.label;
-  badge.style.backgroundColor = data.level.color + '20';
-  badge.style.color = data.level.color;
-  
-  document.getElementById('evaluationModal').classList.remove('hidden');
+  document.getElementById('evalLoading').classList.add('hidden');
+  if (!res.ok) { document.getElementById('evalText').textContent = 'Không thể tải đánh giá.'; return; }
+  const d = await res.json();
+
+  const color = d.level.color || '#10b981';
+
+  // Donut arc (wPct maps directly to stroke-dasharray since circumference ≈ 100)
+  const arc = document.getElementById('evalDonutArc');
+  arc.setAttribute('stroke', color);
+  setTimeout(() => arc.setAttribute('stroke-dasharray', `${d.wPct} 100`), 50);
+
+  document.getElementById('evalWPct').textContent = `${d.wPct}%`;
+  document.getElementById('evalWPct').style.color = color;
+  document.getElementById('evalFraction').textContent = `${d.score}/${d.total} câu`;
+  document.getElementById('evalRawPct').textContent = `${d.pct}%`;
+
+  const badge = document.getElementById('evalLevelBadge');
+  badge.textContent = d.level.label;
+  badge.style.background = color + '20';
+  badge.style.color = color;
+
+  // Difficulty breakdown bars
+  const diffColors = { easy: '#16a34a', medium: '#d97706', hard: '#dc2626' };
+  document.getElementById('evalBreakdown').innerHTML = (d.breakdown || []).map(g => {
+    const pct = g.total > 0 ? Math.round(g.solved / g.total * 100) : 0;
+    const c   = diffColors[g.key] || '#64748b';
+    return `<div>
+      <div class="flex justify-between text-xs mb-1">
+        <span class="font-semibold text-gray-600">${esc(g.label)}</span>
+        <span style="color:${c}" class="font-bold">${g.solved}/${g.total} câu · ${pct}%</span>
+      </div>
+      <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+        <div class="h-2 rounded-full transition-all" style="width:${pct}%;background:${c}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Evaluation text (server may contain <strong> tags)
+  document.getElementById('evalText').innerHTML = d.evalText || '';
 }
 
 function handleEvalOverlayClick(e) {

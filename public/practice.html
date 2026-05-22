@@ -489,7 +489,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
-    <div class="sidebar-brand">
+    <a href="/" class="sidebar-brand block hover:brightness-110 transition-all" style="text-decoration:none">
       <div class="flex items-center gap-2 hide-on-collapse">
         <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center overflow-hidden">
           <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain" />
@@ -500,7 +500,7 @@
         id="sidebarLogoCollapsed">
         <img src="/photo/images.png" alt="Logo" class="w-7 h-7 object-contain" />
       </div>
-    </div>
+    </a>
     <nav class="p-2 pt-3 flex-1">
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pb-1.5 hide-on-collapse">Điều hướng
       </p>
@@ -521,9 +521,30 @@
         <div class="sidebar-tooltip">Ôn luyện</div>
       </a>
     </nav>
-    <div class="px-4 py-3 border-t border-gray-100 hide-on-collapse">
-      <p class="text-xs text-gray-400">Powered by FPT IS</p>
+  <div class="border-t border-gray-100 mt-auto">
+    <!-- Logged-in user widget -->
+    <div id="userBar" class="hidden">
+      <div class="sidebar-nav-item relative" onclick="event.stopPropagation(); document.getElementById('logoutDropdown').classList.toggle('hidden')">
+        <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0" id="listUserAvatar">U</div>
+        <div class="hide-on-collapse min-w-0">
+          <p class="text-xs font-semibold text-gray-700 truncate leading-tight" id="listUserName">User</p>
+          <p class="text-[10px] text-gray-400 truncate leading-tight" id="listUserEmail">-</p>
+        </div>
+        <div class="sidebar-tooltip">Tài khoản</div>
+        <!-- Dropdown -->
+        <div id="logoutDropdown" class="hidden absolute left-0 bottom-full mb-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 text-gray-800">
+          <div class="px-4 py-2 border-b border-gray-100">
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Tài khoản</p>
+            <p class="text-xs text-gray-600 truncate mt-0.5" id="listUserEmailDropdown">-</p>
+          </div>
+          <button onclick="handleLogout(event)" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Đăng xuất
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
   </aside>
 
   <div id="pageContent">
@@ -532,47 +553,11 @@
     <!-- SCREEN 1: List of practice sets                        -->
     <!-- ══════════════════════════════════════════════════════ -->
     <div id="screenList">
-      <header style="background:linear-gradient(160deg,#312e81,#4338ca 50%,#4f46e5)" class="text-white px-6 py-10">
-        <div class="max-w-3xl mx-auto">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h1 class="text-2xl font-bold">Ôn luyện kiến thức</h1>
-              </div>
-              <p class="text-indigo-200/80 text-sm ml-13">Chọn bộ câu hỏi để kiểm tra và đánh giá năng lực của bạn</p>
-            </div>
-            <div id="userBar" class="hidden flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm relative flex-shrink-0">
-              <div id="userWidgetContent" class="flex items-center gap-2 cursor-pointer relative" onclick="event.stopPropagation(); document.getElementById('logoutDropdown').classList.toggle('hidden')">
-                <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm uppercase" id="listUserAvatar">U</div>
-                <span class="text-sm font-medium text-white" id="listUserName">User</span>
-                <svg class="w-4 h-4 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                
-                <!-- Dropdown -->
-                <div id="logoutDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 text-gray-800">
-                  <div class="px-4 py-2 border-b border-gray-100">
-                    <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Tài khoản</p>
-                    <p class="text-xs text-gray-600 truncate mt-0.5" id="listUserEmail">-</p>
-                  </div>
-                  <button onclick="handleLogout(event)" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Đăng xuất
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="w-full px-4 py-8">
+        <div class="mb-6">
+          <h1 class="text-xl font-bold text-gray-800">Ôn luyện kiến thức</h1>
+          <p class="text-sm text-gray-500 mt-1">Chọn bộ câu hỏi để kiểm tra và đánh giá năng lực của bạn</p>
         </div>
-      </header>
-
-      <div class="max-w-3xl mx-auto px-4 py-8">
-
-
-
 
         <!-- Sets grid -->
         <div id="setsLoading" class="text-center py-16 text-gray-400">
@@ -615,7 +600,7 @@
         <span class="text-xs font-bold text-indigo-600 w-10 text-right" id="practiceScore">0/0</span>
       </div>
 
-      <div class="max-w-2xl mx-auto px-4 py-6">
+      <div class="w-full px-4 py-6">
         <!-- Question card -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
           <div class="flex items-center gap-2 mb-4">
@@ -664,7 +649,7 @@
     <!-- SCREEN 3: Results                                      -->
     <!-- ══════════════════════════════════════════════════════ -->
     <div id="screenResult" class="hidden">
-      <div class="max-w-2xl mx-auto px-4 py-10">
+      <div class="w-full px-4 py-10">
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center mb-6">
           <h2 class="text-xl font-bold text-gray-800 mb-6">Kết quả ôn luyện</h2>
           <div class="flex justify-center mb-6">
@@ -697,6 +682,63 @@
     </div>
 
   </div><!-- /pageContent -->
+
+  <!-- PRACTICE SET DETAIL MODAL -->
+  <div id="setDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" style="animation:scaleIn 0.2s ease">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#312e81,#4338ca 60%,#4f46e5)" class="px-6 py-5 relative">
+        <button onclick="document.getElementById('setDetailModal').classList.add('hidden')"
+          class="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="flex items-center gap-3 pr-8">
+          <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <div class="min-w-0">
+            <h3 id="sdName" class="text-base font-bold text-white leading-tight truncate">—</h3>
+            <p class="text-indigo-200/70 text-xs mt-0.5">Chi tiết bộ ôn tập</p>
+          </div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div class="overflow-y-auto" style="max-height:65vh">
+        <!-- Description -->
+        <div id="sdDescWrap" class="hidden px-6 pt-5 pb-0">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Mô tả</p>
+          <p id="sdDesc" class="text-sm text-gray-700 leading-relaxed bg-indigo-50/50 rounded-xl px-4 py-3 border border-indigo-100"></p>
+        </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-3 px-6 pt-5">
+          <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 text-center">
+            <div id="sdQCount" class="text-2xl font-extrabold text-indigo-600">—</div>
+            <div class="text-[11px] text-indigo-400 mt-0.5 font-medium">câu hỏi</div>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-center flex items-center justify-center gap-2" id="sdLoadingCell">
+            <div class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs text-gray-400">Đang tải...</span>
+          </div>
+        </div>
+        <!-- Question list -->
+        <div class="px-6 pt-5 pb-2">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Danh sách câu hỏi</p>
+          <div id="sdQuestions" class="space-y-2"></div>
+        </div>
+        <!-- Scoring scale -->
+        <div id="sdScaleWrap" class="hidden px-6 pt-4 pb-2">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Thang điểm đánh giá</p>
+          <div id="sdScale" class="space-y-1.5"></div>
+        </div>
+        <div class="h-4"></div>
+      </div>
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-100 flex gap-2">
+        <button onclick="document.getElementById('setDetailModal').classList.add('hidden')" class="flex-1 py-2.5 text-sm font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Đóng</button>
+        <button id="sdStartBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition">Bắt đầu ôn tập →</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ── Sidebar ──────────────────────────────────────────────
@@ -743,6 +785,7 @@
         document.getElementById('listUserAvatar').textContent = userName.charAt(0).toUpperCase();
         document.getElementById('listUserName').textContent = userName;
         document.getElementById('listUserEmail').textContent = currentUser.email || '';
+        document.getElementById('listUserEmailDropdown').textContent = currentUser.email || '';
         showScreen('list');
       } else {
         document.getElementById('loginOverlay').classList.remove('hidden');
@@ -781,20 +824,90 @@
 
       const grid = document.getElementById('setsGrid');
       grid.innerHTML = sets.map(s => `
-    <div class="set-card" onclick="startPractice('${s.id}')">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1 min-w-0">
-          <h3 class="font-bold text-gray-800 text-base mb-1">${escHtml(s.name)}</h3>
-          ${s.description ? `<p class="text-sm text-gray-500 leading-relaxed">${escHtml(s.description)}</p>` : ''}
+    <div class="set-card" style="cursor:default">
+      <div class="flex items-center gap-4">
+        <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-indigo-50 flex flex-col items-center justify-center">
+          <span class="text-base font-black text-indigo-600 leading-tight">${s.questionCount}</span>
+          <span class="text-[10px] text-indigo-400 font-medium leading-tight">câu</span>
         </div>
-        <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-50 flex flex-col items-center justify-center">
-          <span class="text-lg font-black text-indigo-600">${s.questionCount}</span>
-          <span class="text-[10px] text-indigo-400 font-medium">câu</span>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-bold text-gray-800 text-sm truncate">${escHtml(s.name)}</h3>
+          ${s.description ? `<p class="text-xs text-gray-500 mt-0.5 truncate">${escHtml(s.description)}</p>` : ''}
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button onclick="viewSetDetail('${s.id}')" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors whitespace-nowrap">Chi tiết</button>
+          <button onclick="startPractice('${s.id}')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors whitespace-nowrap">Bắt đầu →</button>
         </div>
       </div>
     </div>
   `).join('');
       grid.classList.remove('hidden');
+    }
+
+    // ── View set detail ───────────────────────────────────────
+    async function viewSetDetail(setId) {
+      const modal = document.getElementById('setDetailModal');
+      // Reset to loading state
+      document.getElementById('sdName').textContent = '—';
+      document.getElementById('sdDescWrap').classList.add('hidden');
+      document.getElementById('sdQCount').textContent = '—';
+      document.getElementById('sdScaleWrap').classList.add('hidden');
+      document.getElementById('sdQuestions').innerHTML = '<div class="text-sm text-gray-400 text-center py-4">Đang tải...</div>';
+      document.getElementById('sdLoadingCell').innerHTML = '<div class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div><span class="text-xs text-gray-400">Đang tải...</span>';
+      modal.classList.remove('hidden');
+
+      const res = await fetch(`/api/practice/${setId}`);
+      if (!res.ok) {
+        document.getElementById('sdQuestions').innerHTML = '<p class="text-sm text-red-400 text-center py-4">Không thể tải dữ liệu.</p>';
+        return;
+      }
+      const s = await res.json();
+
+      document.getElementById('sdName').textContent = s.name;
+
+      if (s.description) {
+        document.getElementById('sdDesc').textContent = s.description;
+        document.getElementById('sdDescWrap').classList.remove('hidden');
+      }
+
+      const qs = s.questions || [];
+      document.getElementById('sdQCount').textContent = qs.length;
+      document.getElementById('sdLoadingCell').innerHTML = `
+        <div class="text-center w-full">
+          <div class="text-2xl font-extrabold text-gray-700">${new Date(s.created_at || Date.now()).toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'})}</div>
+          <div class="text-[11px] text-gray-400 mt-0.5 font-medium">ngày tạo</div>
+        </div>`;
+
+      // Question list
+      const typeLabel = { single:'Chọn 1', multiple:'Chọn nhiều', matching:'Nối đôi', ordering:'Sắp xếp' };
+      const typeColor = { single:'#2563eb', multiple:'#7c3aed', matching:'#d97706', ordering:'#059669' };
+      document.getElementById('sdQuestions').innerHTML = qs.length
+        ? qs.map((q, i) => {
+            const color = typeColor[q.question_type] || '#64748b';
+            return `<div class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+              <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-[11px] font-bold flex items-center justify-center flex-shrink-0">${i+1}</span>
+              <span class="flex-1 text-sm text-gray-800 font-medium leading-snug">${escHtml(q.title)}</span>
+              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0" style="background:${color}18;color:${color}">${typeLabel[q.question_type]||q.question_type}</span>
+            </div>`;
+          }).join('')
+        : '<p class="text-sm text-gray-400 italic">Chưa có câu hỏi nào.</p>';
+
+      // Scoring scale
+      const scale = s.scoring_scale;
+      if (scale && scale.length) {
+        document.getElementById('sdScale').innerHTML = scale.map(row => `
+          <div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-gray-100 bg-gray-50">
+            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:${row.color||'#94a3b8'}"></div>
+            <span class="text-sm font-semibold text-gray-700 flex-1">${escHtml(row.label||'')}</span>
+            <span class="text-xs text-gray-400">≥ ${row.min_pct||0}%</span>
+          </div>`).join('');
+        document.getElementById('sdScaleWrap').classList.remove('hidden');
+      }
+
+      document.getElementById('sdStartBtn').onclick = () => {
+        modal.classList.add('hidden');
+        startPractice(setId);
+      };
     }
 
     // ── Start practice ────────────────────────────────────────

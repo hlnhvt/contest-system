@@ -198,38 +198,119 @@ router.get('/:id/scoreboard', async (req, res) => {
 router.get('/:id/evaluation', async (req, res) => {
   const contestId = req.params.id;
   const participantId = req.query.participantId;
-  
   if (!participantId) return res.status(400).json({ error: 'Thiếu participantId' });
 
   const { data: contest } = await supabase.from('contests').select('scoring_scale').eq('id', contestId).single();
   if (!contest) return res.status(404).json({ error: 'Không tìm thấy kỳ thi' });
 
-  const { count: totalQuestions } = await supabase.from('contest_questions')
-    .select('id', { count: 'exact', head: true })
+  // Fetch questions with difficulty via join
+  const { data: cqs } = await supabase
+    .from('contest_questions')
+    .select('question_id, questions(id, title, difficulty, question_type)')
     .eq('contest_id', contestId);
 
-  const { count: score } = await supabase.from('submissions')
-    .select('id', { count: 'exact', head: true })
+  // Fetch all submissions of this participant for this contest
+  const { data: subs } = await supabase
+    .from('submissions')
+    .select('question_id, status')
     .eq('contest_id', contestId)
-    .eq('participant_id', participantId)
-    .eq('status', 'correct');
+    .eq('participant_id', participantId);
 
-  const t = totalQuestions || 0;
-  const s = score || 0;
-  const pct = t > 0 ? Math.round((s / t) * 100) : 0;
-  
+  const questions = (cqs || []).map(cq => ({
+    id: cq.question_id,
+    title: cq.questions?.title || '',
+    difficulty: cq.questions?.difficulty ?? 0,
+    type: cq.questions?.question_type || 'single',
+  }));
+
+  const solvedSet    = new Set((subs || []).filter(s => s.status === 'correct').map(s => s.question_id));
+  const attemptedSet = new Set((subs || []).map(s => s.question_id));
+
+  const total = questions.length;
+  const score = questions.filter(q => solvedSet.has(q.id)).length;
+  const pct   = total > 0 ? Math.round((score / total) * 100) : 0;
+
+  // Weighted score: câu khó hơn có trọng số cao hơn (weight = difficulty + 1, range 1–6)
+  let wTotal = 0, wScore = 0;
+  for (const q of questions) {
+    const w = (q.difficulty || 0) + 1;
+    wTotal += w;
+    if (solvedSet.has(q.id)) wScore += w;
+  }
+  const wPct = wTotal > 0 ? Math.round((wScore / wTotal) * 100) : 0;
+
+  // Breakdown theo nhóm độ khó
+  const groups = [
+    { key: 'easy',   label: 'Dễ',         color: '#16a34a', range: [0, 1] },
+    { key: 'medium', label: 'Trung bình',  color: '#d97706', range: [2, 3] },
+    { key: 'hard',   label: 'Khó',        color: '#dc2626', range: [4, 5] },
+  ];
+  const breakdown = groups.map(g => {
+    const qs     = questions.filter(q => q.difficulty >= g.range[0] && q.difficulty <= g.range[1]);
+    const solved = qs.filter(q => solvedSet.has(q.id)).length;
+    return { ...g, total: qs.length, solved };
+  }).filter(g => g.total > 0);
+
+  // Xếp loại dựa trên điểm có trọng số
   const DEFAULT_SCALE = [
     { min: 0,  max: 39,  label: 'Cần cải thiện', color: '#ef4444' },
     { min: 40, max: 59,  label: 'Trung bình',    color: '#f59e0b' },
     { min: 60, max: 74,  label: 'Khá',           color: '#3b82f6' },
     { min: 75, max: 89,  label: 'Giỏi',          color: '#8b5cf6' },
-    { min: 90, max: 100, label: 'Xuất sắc',      color: '#10b981' }
+    { min: 90, max: 100, label: 'Xuất sắc',      color: '#10b981' },
   ];
-  
-  const scale = Array.isArray(contest.scoring_scale) && contest.scoring_scale.length ? contest.scoring_scale : DEFAULT_SCALE;
-  const level = scale.find(r => pct >= r.min && pct <= r.max) || scale[scale.length - 1];
+  const scale = Array.isArray(contest.scoring_scale) && contest.scoring_scale.length
+    ? contest.scoring_scale : DEFAULT_SCALE;
+  const level = scale.find(r => wPct >= (r.min_pct ?? r.min) && wPct <= (r.max_pct ?? r.max))
+    || scale[scale.length - 1];
 
-  res.json({ score: s, total: t, pct, level });
+  // Tạo đoạn văn đánh giá
+  const notAttempted = questions.filter(q => !attemptedSet.has(q.id)).length;
+  const easy   = breakdown.find(g => g.key === 'easy');
+  const medium = breakdown.find(g => g.key === 'medium');
+  const hard   = breakdown.find(g => g.key === 'hard');
+
+  // Dòng tổng hợp
+  const summaryLine = `Bạn đã giải đúng <strong>${score}/${total}</strong> câu (${pct}%). Với trọng số theo độ khó, điểm năng lực đạt <strong>${wPct}%</strong> — xếp loại <strong style="color:${level.color}">${level.label}</strong>.`;
+
+  // Nhận xét định tính
+  let qualLine = '';
+  if (wPct >= 90) {
+    qualLine = 'Kết quả xuất sắc! Bạn thể hiện sự nắm vững kiến thức toàn diện, kể cả các câu hỏi có độ khó cao.';
+  } else if (wPct >= 75) {
+    qualLine = 'Kết quả tốt. Bạn xử lý vững phần lớn nội dung; có thể ôn thêm các câu hỏi khó để nâng tầm năng lực.';
+  } else if (wPct >= 60) {
+    qualLine = 'Kết quả khá. Nền tảng kiến thức tương đối vững, nhưng cần đầu tư thêm cho phần nâng cao.';
+  } else if (wPct >= 40) {
+    qualLine = 'Kết quả trung bình. Bạn nắm được kiến thức cơ bản nhưng cần cải thiện độ chính xác ở mức độ khó hơn.';
+  } else {
+    qualLine = 'Kết quả cần cải thiện. Hãy ôn lại kiến thức nền tảng, sau đó tăng dần lên các bài khó hơn.';
+  }
+
+  // Phân tích theo độ khó
+  const bParts = breakdown.map(g => `<strong>${g.label}</strong>: ${g.solved}/${g.total}`).join(' &nbsp;·&nbsp; ');
+
+  // Các ghi chú bổ sung (bullet points)
+  const notes = [];
+  if (easy && easy.solved < easy.total) {
+    notes.push(`Còn <strong>${easy.total - easy.solved}</strong> câu dễ chưa giải đúng — đây là phần cần ưu tiên ôn luyện trước.`);
+  }
+  if (hard && hard.solved > 0) {
+    notes.push(`Giải được <strong>${hard.solved}/${hard.total}</strong> câu khó — cho thấy tư duy phân tích tốt.`);
+  } else if (hard && hard.total > 0) {
+    notes.push(`Các câu khó (<strong>${hard.total}</strong> câu) chưa được giải đúng — đây là mảng cần phát triển tiếp.`);
+  }
+  if (notAttempted > 0) {
+    notes.push(`Có <strong>${notAttempted}</strong> câu chưa được thử — lần sau hãy cố gắng trả lời tất cả để không bỏ lỡ điểm.`);
+  }
+
+  const notesHtml = notes.length
+    ? `<ul class="mt-3 space-y-1.5">${notes.map(n => `<li class="flex items-start gap-2"><span class="leading-5">${n}</span></li>`).join('')}</ul>`
+    : '';
+
+  const evalText = `<p>${summaryLine} ${qualLine}</p>${bParts ? `<p class="mt-2 text-xs text-gray-500">Phân tích theo độ khó — ${bParts}.</p>` : ''}${notesHtml}`;
+
+  res.json({ score, total, pct, wPct, level, breakdown, evalText });
 });
 
 module.exports = router;

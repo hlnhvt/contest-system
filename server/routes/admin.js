@@ -95,7 +95,11 @@ router.post('/contests/auto', async (req, res) => {
 });
 
 router.delete('/contests/:id', async (req, res) => {
-  const { error } = await supabase.from('contests').delete().eq('id', req.params.id);
+  const id = req.params.id;
+  // submissions không có ON DELETE CASCADE nên phải xóa thủ công trước
+  const { error: subErr } = await supabase.from('submissions').delete().eq('contest_id', id);
+  if (subErr) return res.status(500).json({ error: subErr.message });
+  const { error } = await supabase.from('contests').delete().eq('id', id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ ok: true });
 });

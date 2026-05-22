@@ -663,15 +663,9 @@
       <!-- Sidebar -->
       <aside class="sidebar bg-white border-r border-gray-200 shadow-sm flex flex-col fixed top-0 left-0 h-full z-10">
         <!-- Logo -->
-        <div class="p-5 border-b border-gray-100">
+        <div class="p-4 border-b border-gray-100">
           <div class="flex items-center gap-3">
-            <div
-              class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-              </svg>
-            </div>
+            <img src="/photo/images.png" alt="Logo" class="h-9 w-auto object-contain rounded-lg flex-shrink-0" />
             <div>
               <div class="font-bold text-gray-800 text-sm">Admin Panel</div>
               <div class="text-gray-400 text-xs">Hệ thống đánh giá</div>
@@ -822,7 +816,38 @@
               <button onclick="setDiffFilter(0)" id="dfsReset"
                 class="text-xs text-gray-300 hover:text-gray-500 ml-1 hidden" title="Xoá lọc độ khó">✕</button>
             </div>
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+              </svg>
+              <select id="qSortBy" onchange="filterQuestions()" class="field text-xs" style="padding:5px 10px;height:auto;border-radius:8px;min-width:160px">
+                <option value="updated_desc">Cập nhật mới nhất</option>
+                <option value="updated_asc">Cập nhật cũ nhất</option>
+                <option value="created_desc">Mới thêm vào</option>
+                <option value="created_asc">Cũ nhất</option>
+                <option value="diff_asc">Độ khó tăng dần</option>
+                <option value="diff_desc">Độ khó giảm dần</option>
+                <option value="title_asc">Tiêu đề A → Z</option>
+                <option value="title_desc">Tiêu đề Z → A</option>
+              </select>
+            </div>
             <span id="qCount" class="text-xs text-gray-400"></span>
+          </div>
+          <!-- Bulk action toolbar -->
+          <div id="bulkToolbar" class="hidden mb-4 flex items-center gap-3 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl animate-fade-up">
+            <input type="checkbox" id="selectAllQCheck" onchange="selectAllQuestions(this.checked)"
+              class="w-4 h-4 rounded accent-red-600" title="Chọn tất cả">
+            <span id="bulkCountLabel" class="text-sm font-medium text-red-700">0 câu hỏi đã chọn</span>
+            <div class="flex-1"></div>
+            <button onclick="bulkDeleteQuestions()" class="btn-sm btn-delete flex items-center gap-1.5"
+              style="padding:6px 14px;font-size:12px">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Xoá đã chọn
+            </button>
+            <button onclick="clearQSelection()" class="btn-sm btn-bookmark-off" style="padding:6px 12px;font-size:12px">Bỏ chọn</button>
           </div>
           <div id="questionList" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
           <div id="qPagination" class="flex items-center justify-between mt-5 flex-wrap gap-3"></div>
@@ -1041,6 +1066,67 @@
     </div>
   </div>
 
+  <!-- PRACTICE DETAIL MODAL -->
+  <div id="practiceDetailModal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="modal-box max-w-xl p-0 overflow-hidden">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#312e81,#4338ca 60%,#4f46e5)" class="px-6 py-5 relative">
+        <button onclick="document.getElementById('practiceDetailModal').classList.add('hidden')"
+          class="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <div class="min-w-0 pr-8">
+            <h3 id="pdName" class="text-base font-bold text-white leading-tight truncate">—</h3>
+            <div id="pdMeta" class="flex items-center gap-2 mt-1"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+        <!-- Description -->
+        <div id="pdDescWrap" class="hidden">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Mô tả</p>
+          <p id="pdDesc" class="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-4 py-3 border border-gray-100"></p>
+        </div>
+        <!-- Stats row -->
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 text-center">
+            <div id="pdQCount" class="text-2xl font-extrabold text-indigo-600">—</div>
+            <div class="text-[11px] text-indigo-400 mt-0.5 font-medium">câu hỏi</div>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 text-center">
+            <div id="pdVisibility" class="text-sm font-extrabold text-emerald-600">—</div>
+            <div class="text-[11px] text-emerald-400 mt-0.5 font-medium">trạng thái</div>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-center">
+            <div id="pdCreated" class="text-xs font-extrabold text-gray-600 leading-tight">—</div>
+            <div class="text-[11px] text-gray-400 mt-0.5 font-medium">ngày tạo</div>
+          </div>
+        </div>
+        <!-- Question list -->
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Danh sách câu hỏi</p>
+          <div id="pdQuestions" class="space-y-2"></div>
+        </div>
+        <!-- Scoring scale -->
+        <div id="pdScaleWrap" class="hidden">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Thang điểm đánh giá</p>
+          <div id="pdScale" class="space-y-1.5"></div>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+        <button onclick="document.getElementById('practiceDetailModal').classList.add('hidden')"
+          class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Đóng</button>
+        <button id="pdEditBtn" class="btn-primary text-sm">Chỉnh sửa</button>
+      </div>
+    </div>
+  </div>
+
   <!-- CONTEST MODAL -->
   <div id="contestModal" class="modal-overlay hidden">
     <div class="modal-box max-w-lg p-7">
@@ -1081,6 +1167,16 @@
           </div>
         </div>
 
+        <!-- Practice set import (only for new contests) -->
+        <div id="cPracticeSetBlock" class="border-t border-gray-100 pt-4 mt-2">
+          <label class="lbl">Bộ câu hỏi ôn tập <span class="text-gray-400 font-normal">(Tuỳ chọn)</span></label>
+          <p class="text-xs text-gray-400 mb-2">Chọn bộ ôn tập để tự động gán toàn bộ câu hỏi vào kỳ thi sau khi tạo</p>
+          <select id="cPracticeSet" class="field text-sm">
+            <option value="">-- Không chọn --</option>
+          </select>
+          <p id="cPracticeSetInfo" class="text-xs text-indigo-500 mt-1.5 hidden"></p>
+        </div>
+
         <!-- Scoring scale for contest -->
         <div class="border-t border-gray-100 pt-4 mt-2">
           <div class="flex items-center justify-between mb-2">
@@ -1098,6 +1194,52 @@
           class="flex-1 py-2.5 border-2 border-gray-200 rounded-xl text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors">Huỷ</button>
         <button onclick="saveContest()"
           class="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION DETAIL MODAL -->
+  <div id="questionDetailModal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="modal-box max-w-xl p-0 overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <span id="qdModalTypeBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white"></span>
+              <span id="qdModalDiffStars" class="text-sm"></span>
+            </div>
+            <h2 id="qdModalTitle" class="text-white font-bold text-base leading-snug"></h2>
+          </div>
+          <button onclick="document.getElementById('questionDetailModal').classList.add('hidden')"
+            class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center flex-shrink-0 text-lg leading-none transition-colors">×</button>
+        </div>
+        <div id="qdModalTags" class="flex flex-wrap gap-1.5 mt-2"></div>
+      </div>
+      <!-- Body -->
+      <div class="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+        <div id="qdModalDescBlock" class="hidden">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Nội dung câu hỏi</p>
+          <p id="qdModalDesc" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"></p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Đáp án</p>
+          <div id="qdModalChoices" class="space-y-1.5"></div>
+        </div>
+        <div id="qdModalExplanationBlock" class="hidden">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Giải thích</p>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <p id="qdModalExplanation" class="text-sm text-amber-800 leading-relaxed whitespace-pre-wrap"></p>
+          </div>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+        <button id="qdModalEditBtn" onclick="" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
+          Chỉnh sửa
+        </button>
+        <button onclick="document.getElementById('questionDetailModal').classList.add('hidden')"
+          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-semibold transition-colors">Đóng</button>
       </div>
     </div>
   </div>
@@ -1334,6 +1476,18 @@
         </div>
       </div>
       <div class="p-6">
+        <!-- Chọn từ bộ ôn tập -->
+        <div class="mb-5 p-3.5 bg-purple-50 border border-purple-100 rounded-xl">
+          <p class="text-xs font-bold text-purple-600 uppercase tracking-wide mb-2">Thêm nhanh từ bộ ôn tập</p>
+          <div class="flex gap-2 items-center">
+            <select id="assignFromSet" class="field text-xs flex-1" style="padding:7px 10px;height:auto">
+              <option value="">-- Chọn bộ ôn tập --</option>
+            </select>
+            <button onclick="addFromPracticeSet()"
+              class="btn-sm btn-purple flex-shrink-0" style="padding:7px 14px;font-size:12px">Thêm tất cả</button>
+          </div>
+          <p id="assignFromSetInfo" class="text-xs text-purple-400 mt-1.5 hidden"></p>
+        </div>
         <div class="grid grid-cols-2 gap-5">
           <!-- Available -->
           <div>
@@ -1433,6 +1587,7 @@
     let currentPage = 1;
     let pageSize = 15;
     let filteredQuestions = [];
+    let selectedQIds = new Set();
     const DIFF_LABELS = ['', 'Rất dễ', 'Dễ', 'Trung bình', 'Khó', 'Rất khó'];
 
     // ── Question type modal state ────────────────
@@ -1488,9 +1643,11 @@
     }
 
     async function loadAll() {
-      const [cr, qr] = await Promise.all([api('/contests'), api('/questions')]);
+      const [cr, qr, pr] = await Promise.all([api('/contests'), api('/questions'), api('/practice-sets')]);
       allContests = await cr.json();
       allQuestions = await qr.json();
+      allPracticeSets = pr.ok ? await pr.json() : [];
+      selectedQIds.clear();
       renderContests();
       filterQuestions();
       populateSubFilter();
@@ -1601,6 +1758,9 @@
       document.getElementById('contestModalError').classList.add('hidden');
       document.getElementById('contestScaleRows').innerHTML = '';
 
+      const psBlock = document.getElementById('cPracticeSetBlock');
+      const psSelect = document.getElementById('cPracticeSet');
+      const psInfo = document.getElementById('cPracticeSetInfo');
       if (id) {
         const c = allContests.find(x => x.id === id);
         document.getElementById('cName').value = c.name;
@@ -1612,6 +1772,7 @@
         if (c.scoring_scale && c.scoring_scale.length > 0) {
           c.scoring_scale.forEach(s => addContestScaleRow(s));
         }
+        psBlock.classList.add('hidden');
       } else {
         ['cName', 'cDesc'].forEach(i => document.getElementById(i).value = '');
         const now = toLocal(new Date().toISOString());
@@ -1619,6 +1780,11 @@
         document.getElementById('cEnd').value = now;
         document.getElementById('cRequireLogin').checked = false;
         document.getElementById('cIsAI').checked = false;
+        psBlock.classList.remove('hidden');
+        psInfo.classList.add('hidden');
+        psSelect.innerHTML = '<option value="">-- Không chọn --</option>'
+          + allPracticeSets.map(s => `<option value="${s.id}">${esc(s.name)} (${s.questionCount || 0} câu)</option>`).join('');
+        psSelect.value = '';
       }
       document.getElementById('contestModal').classList.remove('hidden');
     }
@@ -1640,6 +1806,23 @@
       const res = await api(id ? `/contests/${id}` : '/contests', { method: id ? 'PUT' : 'POST', body });
       const data = await res.json();
       if (!res.ok) { showErr('contestModalError', data.error); return; }
+
+      // Auto-assign questions from practice set (chỉ khi tạo mới)
+      if (!id) {
+        const psId = document.getElementById('cPracticeSet').value;
+        if (psId) {
+          const ps = allPracticeSets.find(s => s.id === psId);
+          if (ps?.question_ids?.length) {
+            const questions = ps.question_ids.map((qid, i) => ({
+              questionId: qid,
+              label: LABELS[i] || `Q${i + 1}`,
+              order_num: i
+            }));
+            await api(`/contests/${data.id}/questions`, { method: 'POST', body: { questions } });
+          }
+        }
+      }
+
       document.getElementById('contestModal').classList.add('hidden');
       loadAll();
     }
@@ -1712,7 +1895,8 @@
 
     async function deleteContest(id) {
       if (!confirm('Xoá kỳ thi? Tất cả bài nộp sẽ bị xoá!')) return;
-      await api(`/contests/${id}`, { method: 'DELETE' });
+      const res = await api(`/contests/${id}`, { method: 'DELETE' });
+      if (!res.ok) { const e = await res.json(); alert('Xoá thất bại: ' + (e.error || res.status)); return; }
       loadAll();
     }
 
@@ -1730,10 +1914,41 @@
       assignContestId = contestId; assignSelected = [];
       document.getElementById('assignContestName').textContent = contestName;
       document.getElementById('assignSearch').value = '';
+      document.getElementById('assignFromSetInfo').classList.add('hidden');
+      // Populate practice set dropdown
+      const setSelect = document.getElementById('assignFromSet');
+      setSelect.innerHTML = '<option value="">-- Chọn bộ ôn tập --</option>'
+        + allPracticeSets.map(s => `<option value="${s.id}">${esc(s.name)} (${s.questionCount || 0} câu)</option>`).join('');
+      setSelect.value = '';
       document.getElementById('assignModal').classList.remove('hidden');
       const res = await api(`/contests/${contestId}/questions`);
       const current = await res.json();
       assignSelected = current.map(cq => ({ questionId: cq.question_id, label: cq.label, title: cq.question?.title || '' }));
+      renderAssignLists();
+    }
+
+    function addFromPracticeSet() {
+      const setId = document.getElementById('assignFromSet').value;
+      const infoEl = document.getElementById('assignFromSetInfo');
+      if (!setId) { infoEl.textContent = 'Vui lòng chọn một bộ ôn tập.'; infoEl.classList.remove('hidden'); return; }
+      const ps = allPracticeSets.find(s => s.id === setId);
+      if (!ps || !ps.question_ids?.length) { infoEl.textContent = 'Bộ ôn tập này chưa có câu hỏi.'; infoEl.classList.remove('hidden'); return; }
+      const selIds = new Set(assignSelected.map(s => s.questionId));
+      let added = 0;
+      for (const qid of ps.question_ids) {
+        if (selIds.has(qid)) continue;
+        const q = allQuestions.find(x => x.id === qid);
+        if (!q) continue;
+        const label = LABELS[assignSelected.length] || `Q${assignSelected.length + 1}`;
+        assignSelected.push({ questionId: qid, label, title: q.title });
+        selIds.add(qid);
+        added++;
+      }
+      const skipped = ps.question_ids.length - added;
+      infoEl.textContent = added > 0
+        ? `Đã thêm ${added} câu hỏi từ bộ "${ps.name}"${skipped > 0 ? ` (bỏ qua ${skipped} câu đã có)` : ''}.`
+        : `Tất cả câu hỏi trong bộ này đã được thêm rồi.`;
+      infoEl.classList.remove('hidden');
       renderAssignLists();
     }
 
@@ -1745,25 +1960,40 @@
       const avail = allQuestions.filter(x => !selIds.has(x.id) && (!q || x.title.toLowerCase().includes(q) || (x.tags || []).join(' ').toLowerCase().includes(q)));
 
       document.getElementById('assignAvailable').innerHTML = avail.length
-        ? avail.map(q => `
+        ? avail.map(q => {
+            const diff = q.difficulty || 0;
+            const stars = diff > 0 ? [1,2,3,4,5].map(n => `<span style="color:${n<=diff?'#f59e0b':'#e2e8f0'};font-size:10px;line-height:1">★</span>`).join('') : '';
+            return `
       <div class="assign-item" onclick="addToAssign('${q.id}','${esc(q.title)}')">
         ${IC.doc}
         <div class="flex-1 min-w-0">
           <div class="font-medium text-gray-800 text-xs truncate">${esc(q.title)}</div>
-          ${q.tags?.length ? `<div class="flex gap-1 mt-0.5">${q.tags.slice(0, 2).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+          <div class="flex items-center gap-2 mt-0.5">
+            ${stars ? `<span class="flex">${stars}</span>` : ''}
+            ${q.tags?.length ? q.tags.slice(0, 2).map(t => `<span class="tag">${esc(t)}</span>`).join('') : ''}
+          </div>
         </div>
         <span class="text-blue-400 text-xs flex-shrink-0">+ Thêm</span>
-      </div>`).join('')
+      </div>`;
+          }).join('')
         : '<p class="text-xs text-gray-400 text-center py-6">Không có câu hỏi nào</p>';
 
       document.getElementById('assignCount').textContent = `(${assignSelected.length} câu)`;
       document.getElementById('assignSelected').innerHTML = assignSelected.length
-        ? assignSelected.map((s, i) => `
+        ? assignSelected.map((s, i) => {
+            const qData = allQuestions.find(x => x.id === s.questionId);
+            const diff = qData?.difficulty || 0;
+            const stars = diff > 0 ? [1,2,3,4,5].map(n => `<span style="color:${n<=diff?'#f59e0b':'#e2e8f0'};font-size:10px;line-height:1">★</span>`).join('') : '';
+            return `
       <div class="assign-selected">
         <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">${esc(s.label)}</span>
-        <span class="flex-1 text-xs text-gray-700 min-w-0 truncate">${esc(s.title)}</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs text-gray-700 truncate">${esc(s.title)}</div>
+          ${stars ? `<div class="flex mt-0.5">${stars}</div>` : ''}
+        </div>
         <button onclick="removeFromAssign(${i})" class="text-red-400 hover:text-red-600 text-xs flex-shrink-0 px-1">✕</button>
-      </div>`).join('')
+      </div>`;
+          }).join('')
         : '<p class="text-xs text-gray-400 text-center py-6">Chưa chọn câu hỏi nào</p>';
     }
 
@@ -1818,10 +2048,17 @@
         const starsHtml = diff > 0
           ? `<div class="flex items-center gap-0.5 mt-1.5">${[1, 2, 3, 4, 5].map(n => `<span class="text-sm leading-none ${n <= diff ? 'text-amber-400' : 'text-gray-200'}">★</span>`).join('')}<span class="text-xs text-gray-400 ml-1">${DIFF_LABELS[diff]}</span></div>`
           : '';
+        const createdAt = q.created_at ? fmtDate(q.created_at) : '';
+        const updatedAt = q.updated_at && q.updated_at !== q.created_at ? fmtDate(q.updated_at) : '';
+        const isSelected = selectedQIds.has(q.id);
         return `
-    <div class="q-card animate-fade-up stagger-${Math.min(i + 1, 3)}${isBookmarked ? ' q-card-bookmarked' : ''}">
+    <div class="q-card animate-fade-up stagger-${Math.min(i + 1, 3)}${isBookmarked ? ' q-card-bookmarked' : ''}${isSelected ? ' ring-2 ring-red-400 bg-red-50/30' : ''}" id="qcard-${q.id}" style="position:relative">
+      <input type="checkbox" class="q-select-check absolute top-2 right-2 w-4 h-4 rounded accent-red-600 cursor-pointer"
+        ${isSelected ? 'checked' : ''} onchange="toggleQSelect('${q.id}', this.checked)" title="Chọn câu hỏi này">
       <div class="flex items-start gap-3 mb-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">${IC.bulb}</div>
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">${IC.bulb}</div>
+        </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5 flex-wrap">
             <h3 class="font-bold text-gray-900 text-sm leading-tight">${esc(q.title)}</h3>
@@ -1836,11 +2073,18 @@
       <div class="space-y-1 mb-3">
         ${renderQCardBody(q)}
       </div>
-      <div class="flex gap-1.5 flex-wrap pt-2 border-t border-gray-100">
-        <button onclick="copyQuestion('${q.id}')" class="btn-sm btn-copy" title="Sao chép thành câu hỏi mới"><svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>Sao chép</button>
-        <button onclick="toggleBookmark('${q.id}')" class="btn-sm ${isBookmarked ? 'btn-bookmark-on' : 'btn-bookmark-off'}" title="${isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu câu hỏi'}"><svg class="w-3 h-3 mr-1 inline" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>${isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu'}</button>
-        <button onclick="openQuestionModal('${q.id}')" class="btn-sm btn-edit">Sửa</button>
-        <button onclick="deleteQuestion('${q.id}')" class="btn-sm btn-delete">Xoá</button>
+      <div class="pt-2 border-t border-gray-100">
+        <div class="flex items-center gap-3 mb-2 text-xs text-gray-300">
+          ${createdAt ? `<span class="flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Thêm: ${createdAt}</span>` : ''}
+          ${updatedAt ? `<span class="flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Sửa: ${updatedAt}</span>` : ''}
+        </div>
+        <div class="flex gap-1.5 flex-wrap">
+          <button onclick="copyQuestion('${q.id}')" class="btn-sm btn-copy" title="Sao chép thành câu hỏi mới"><svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>Sao chép</button>
+          <button onclick="toggleBookmark('${q.id}')" class="btn-sm ${isBookmarked ? 'btn-bookmark-on' : 'btn-bookmark-off'}" title="${isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu câu hỏi'}"><svg class="w-3 h-3 mr-1 inline" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>${isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu'}</button>
+          <button onclick="viewQuestionDetail('${q.id}')" class="btn-sm btn-purple">Chi tiết</button>
+          <button onclick="openQuestionModal('${q.id}')" class="btn-sm btn-edit">Sửa</button>
+          <button onclick="deleteQuestion('${q.id}')" class="btn-sm btn-delete">Xoá</button>
+        </div>
       </div>
     </div>`;
       }).join('');
@@ -1916,6 +2160,21 @@
       if (q) list = list.filter(x => x.title.toLowerCase().includes(q) || x.description.toLowerCase().includes(q) || (x.tags || []).join(' ').toLowerCase().includes(q));
       if (filterBookmarked) list = list.filter(x => !!x.is_bookmarked);
       if (filterDifficulty) list = list.filter(x => (x.difficulty || 0) === filterDifficulty);
+
+      // Sắp xếp
+      const sort = document.getElementById('qSortBy')?.value || 'updated_desc';
+      list = [...list].sort((a, b) => {
+        if (sort === 'updated_desc') return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
+        if (sort === 'updated_asc')  return new Date(a.updated_at || 0) - new Date(b.updated_at || 0);
+        if (sort === 'created_desc') return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        if (sort === 'created_asc')  return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        if (sort === 'diff_asc')     return (a.difficulty || 0) - (b.difficulty || 0);
+        if (sort === 'diff_desc')    return (b.difficulty || 0) - (a.difficulty || 0);
+        if (sort === 'title_asc')    return a.title.localeCompare(b.title, 'vi');
+        if (sort === 'title_desc')   return b.title.localeCompare(a.title, 'vi');
+        return 0;
+      });
+
       filteredQuestions = list;
       currentPage = 1;
       renderQuestions();
@@ -2187,6 +2446,155 @@
       loadAll();
     }
 
+    // ── Question Detail ───────────────────────────
+    function viewQuestionDetail(id) {
+      const q = allQuestions.find(x => x.id === id);
+      if (!q) return;
+      const diff = q.difficulty || 0;
+      const qType = q.question_type || 'single';
+
+      document.getElementById('qdModalTitle').textContent = q.title;
+      document.getElementById('qdModalTypeBadge').textContent = QTYPE_LABELS[qType] || 'Một đáp án';
+      document.getElementById('qdModalDiffStars').innerHTML = diff > 0
+        ? [1,2,3,4,5].map(n => `<span class="${n <= diff ? 'text-amber-400' : 'text-white/30'}">★</span>`).join('') + `<span class="text-white/70 text-xs ml-1">${DIFF_LABELS[diff]}</span>`
+        : '';
+
+      const tagsEl = document.getElementById('qdModalTags');
+      tagsEl.innerHTML = (q.tags || []).map(t => `<span class="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white">${esc(t)}</span>`).join('');
+
+      const descBlock = document.getElementById('qdModalDescBlock');
+      const descEl = document.getElementById('qdModalDesc');
+      if (q.description?.trim()) {
+        descEl.textContent = q.description;
+        descBlock.classList.remove('hidden');
+      } else {
+        descBlock.classList.add('hidden');
+      }
+
+      document.getElementById('qdModalChoices').innerHTML = renderQDetailChoices(q);
+
+      const expBlock = document.getElementById('qdModalExplanationBlock');
+      const expEl = document.getElementById('qdModalExplanation');
+      if (q.explanation?.trim()) {
+        expEl.textContent = q.explanation;
+        expBlock.classList.remove('hidden');
+      } else {
+        expBlock.classList.add('hidden');
+      }
+
+      document.getElementById('qdModalEditBtn').onclick = () => {
+        document.getElementById('questionDetailModal').classList.add('hidden');
+        openQuestionModal(id);
+      };
+
+      document.getElementById('questionDetailModal').classList.remove('hidden');
+    }
+
+    function renderQDetailChoices(q) {
+      const qType = q.question_type || 'single';
+      if (qType === 'single') {
+        return (q.choices || []).map((ch, ci) => {
+          const correct = ci === q.correct_index;
+          return `<div class="flex items-start gap-2.5 text-sm py-2 px-3 rounded-xl ${correct ? 'bg-emerald-50 border border-emerald-200' : 'bg-gray-50 border border-gray-100'}">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 font-bold ${correct ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}">${String.fromCharCode(65+ci)}</span>
+            <span class="flex-1 ${correct ? 'text-emerald-700 font-semibold' : 'text-gray-600'}">${esc(ch)}</span>
+            ${correct ? '<span class="text-emerald-500 font-bold text-base">✓</span>' : ''}
+          </div>`;
+        }).join('');
+      }
+      if (qType === 'multiple') {
+        const ca = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+        return (q.choices || []).map((ch, ci) => {
+          const correct = ca.includes(ci);
+          return `<div class="flex items-start gap-2.5 text-sm py-2 px-3 rounded-xl ${correct ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-100'}">
+            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs flex-shrink-0 font-bold ${correct ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-500'}">${String.fromCharCode(65+ci)}</span>
+            <span class="flex-1 ${correct ? 'text-purple-700 font-semibold' : 'text-gray-600'}">${esc(ch)}</span>
+            ${correct ? '<span class="text-purple-500 font-bold text-base">✓</span>' : ''}
+          </div>`;
+        }).join('');
+      }
+      if (qType === 'matching') {
+        const rights = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+        return `<div class="space-y-1.5">${(q.choices || []).map((ch, i) => `
+          <div class="flex items-center gap-2 text-sm">
+            <div class="flex-1 py-1.5 px-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 font-medium">${esc(ch)}</div>
+            <svg class="w-4 h-4 text-orange-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            <div class="flex-1 py-1.5 px-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-700">${esc(rights[i] || '—')}</div>
+          </div>`).join('')}</div>`;
+      }
+      if (qType === 'ordering') {
+        return (q.choices || []).map((ch, i) => `
+          <div class="flex items-center gap-2.5 text-sm py-2 px-3 rounded-xl bg-teal-50 border border-teal-200">
+            <span class="w-6 h-6 rounded-full bg-teal-500 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">${i+1}</span>
+            <span class="text-teal-800">${esc(ch)}</span>
+          </div>`).join('');
+      }
+      return '';
+    }
+
+    // ── Bulk Select ───────────────────────────────
+    function toggleQSelect(id, checked) {
+      if (checked) selectedQIds.add(id);
+      else selectedQIds.delete(id);
+      updateBulkToolbar();
+      const card = document.getElementById('qcard-' + id);
+      if (card) {
+        card.classList.toggle('ring-2', checked);
+        card.classList.toggle('ring-red-400', checked);
+        card.classList.toggle('bg-red-50/30', checked);
+      }
+    }
+
+    function updateBulkToolbar() {
+      const count = selectedQIds.size;
+      const toolbar = document.getElementById('bulkToolbar');
+      toolbar.classList.toggle('hidden', count === 0);
+      document.getElementById('bulkCountLabel').textContent = count + ' câu hỏi đã chọn';
+      const allVisible = filteredQuestions.slice((currentPage-1)*pageSize, currentPage*pageSize);
+      const allChecked = allVisible.length > 0 && allVisible.every(q => selectedQIds.has(q.id));
+      const allCheckEl = document.getElementById('selectAllQCheck');
+      if (allCheckEl) allCheckEl.checked = allChecked;
+    }
+
+    function selectAllQuestions(checked) {
+      const visible = filteredQuestions.slice((currentPage-1)*pageSize, currentPage*pageSize);
+      visible.forEach(q => {
+        if (checked) selectedQIds.add(q.id);
+        else selectedQIds.delete(q.id);
+        const card = document.getElementById('qcard-' + q.id);
+        if (card) {
+          card.classList.toggle('ring-2', checked);
+          card.classList.toggle('ring-red-400', checked);
+          card.classList.toggle('bg-red-50/30', checked);
+        }
+      });
+      document.querySelectorAll('.q-select-check').forEach(cb => { cb.checked = checked; });
+      updateBulkToolbar();
+    }
+
+    function clearQSelection() {
+      selectedQIds.clear();
+      document.querySelectorAll('.q-select-check').forEach(cb => { cb.checked = false; });
+      document.querySelectorAll('[id^="qcard-"]').forEach(card => {
+        card.classList.remove('ring-2', 'ring-red-400', 'bg-red-50/30');
+      });
+      updateBulkToolbar();
+    }
+
+    async function bulkDeleteQuestions() {
+      const ids = [...selectedQIds];
+      if (!ids.length) return;
+      if (!confirm(`Xoá ${ids.length} câu hỏi đã chọn? Hành động này không thể hoàn tác.`)) return;
+      let failed = 0;
+      for (const id of ids) {
+        const res = await api(`/questions/${id}`, { method: 'DELETE' });
+        if (!res.ok) failed++;
+      }
+      selectedQIds.clear();
+      if (failed > 0) alert(`Xoá xong. ${failed} câu hỏi không thể xoá (có thể đang dùng trong kỳ thi).`);
+      loadAll();
+    }
+
     // ── Copy Question ─────────────────────────────
     async function copyQuestion(id) {
       if (!confirm('Sao chép câu hỏi này thành một câu hỏi mới?')) return;
@@ -2303,6 +2711,23 @@
 
     // ── Utils ─────────────────────────────────────
     function fmt(iso) { return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }); }
+    function fmtDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+    function fmtDateTime(iso) {
+      const d = new Date(iso);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffH = Math.floor(diffMs / 3600000);
+      const diffD = Math.floor(diffMs / 86400000);
+      if (diffMin < 1) return 'vừa xong';
+      if (diffMin < 60) return `${diffMin} phút trước`;
+      if (diffH < 24) return `${diffH} giờ trước`;
+      if (diffD < 7) return `${diffD} ngày trước`;
+      return fmtDate(iso);
+    }
     function toLocal(iso) { const d = new Date(iso), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
     function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.remove('hidden'); }
@@ -2575,6 +3000,7 @@
           <p class="text-xs text-gray-400 mt-1">${s.questionCount} câu hỏi · Tạo ${new Date(s.created_at).toLocaleDateString('vi-VN')}</p>
         </div>
         <div class="flex gap-2 flex-shrink-0">
+          <button onclick="viewPracticeDetail('${s.id}')" class="btn-sm" style="background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd">Chi tiết</button>
           <button onclick="viewPracticeResults('${s.id}','${esc(s.name)}')" class="btn-sm btn-purple">Kết quả</button>
           <button onclick="editPracticeSet('${s.id}')" class="btn-sm btn-edit">Sửa</button>
           <button onclick="deletePracticeSet('${s.id}')" class="btn-sm btn-delete">Xoá</button>
@@ -2706,6 +3132,84 @@
 
     async function editPracticeSet(id) {
       await openPracticeSetModal(id);
+    }
+
+    function viewPracticeDetail(id) {
+      const s = allPracticeSets.find(x => x.id === id);
+      if (!s) return;
+
+      document.getElementById('pdName').textContent = s.name;
+
+      // Meta badges
+      const metaEl = document.getElementById('pdMeta');
+      metaEl.innerHTML = s.is_public
+        ? '<span class="text-[11px] bg-green-400/20 text-green-200 border border-green-300/30 px-2 py-0.5 rounded-full font-medium">Công khai</span>'
+        : '<span class="text-[11px] bg-white/10 text-white/60 border border-white/20 px-2 py-0.5 rounded-full font-medium">Ẩn</span>';
+
+      // Description
+      const descWrap = document.getElementById('pdDescWrap');
+      if (s.description) {
+        document.getElementById('pdDesc').textContent = s.description;
+        descWrap.classList.remove('hidden');
+      } else {
+        descWrap.classList.add('hidden');
+      }
+
+      // Stats
+      const qIds = s.question_ids || [];
+      document.getElementById('pdQCount').textContent = qIds.length;
+      document.getElementById('pdVisibility').textContent = s.is_public ? 'Công khai' : 'Ẩn';
+      document.getElementById('pdCreated').textContent = new Date(s.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      // Question list
+      const typeLabel = { single: 'Chọn 1', multiple: 'Chọn nhiều', matching: 'Nối đôi', ordering: 'Sắp xếp' };
+      const typeColor = { single: '#2563eb', multiple: '#7c3aed', matching: '#d97706', ordering: '#059669' };
+      const pdQ = document.getElementById('pdQuestions');
+      if (!qIds.length) {
+        pdQ.innerHTML = '<p class="text-sm text-gray-400 italic">Chưa có câu hỏi nào.</p>';
+      } else {
+        pdQ.innerHTML = qIds.map((qid, i) => {
+          const q = allQuestions.find(x => x.id === qid);
+          const label = q?.question_type || 'single';
+          const color = typeColor[label] || '#64748b';
+          return `<div class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+            <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-[11px] font-bold flex items-center justify-center flex-shrink-0">${i+1}</span>
+            <span class="flex-1 text-sm text-gray-800 font-medium leading-snug">${q ? esc(q.title) : '<span class="text-gray-400 italic text-xs">Câu hỏi không tồn tại</span>'}</span>
+            ${q ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background:${color}18;color:${color}">${typeLabel[label]||label}</span>` : ''}
+          </div>`;
+        }).join('');
+      }
+
+      // Scoring scale
+      const scaleWrap = document.getElementById('pdScaleWrap');
+      const scaleEl   = document.getElementById('pdScale');
+      const scale = s.scoring_scale;
+      if (scale && scale.length) {
+        const maxPct = Math.max(...scale.map(r => r.min_pct || 0));
+        scaleEl.innerHTML = scale.map(row => {
+          const pct = row.min_pct || 0;
+          const bar = maxPct > 0 ? Math.round(pct / 100 * 100) : 0;
+          return `<div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-gray-100 bg-gray-50">
+            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:${row.color||'#94a3b8'}"></div>
+            <span class="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">${esc(row.label||'')}</span>
+            <div class="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <div class="h-1.5 rounded-full" style="width:${bar}%;background:${row.color||'#94a3b8'}"></div>
+            </div>
+            <span class="text-xs text-gray-400 flex-shrink-0">≥ ${pct}%</span>
+          </div>`;
+        }).join('');
+        scaleWrap.classList.remove('hidden');
+      } else {
+        scaleWrap.classList.add('hidden');
+      }
+
+      // Edit button
+      document.getElementById('pdEditBtn').onclick = () => {
+        document.getElementById('practiceDetailModal').classList.add('hidden');
+        editPracticeSet(id);
+      };
+
+      document.getElementById('practiceDetailModal').classList.remove('hidden');
     }
 
     async function deletePracticeSet(id) {
