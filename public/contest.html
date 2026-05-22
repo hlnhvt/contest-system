@@ -760,6 +760,7 @@ let selectedAnswer = null;   // single: int | multiple: int[] | matching: string
 let lastScoreboardHash = '';
 
 const CHOICE_LABELS = ['A','B','C','D','E','F','G','H'];
+const SUBMIT_COOLDOWN_MS = 2000;
 const GRAD_COLORS = [
   'from-blue-500 to-indigo-600',
   'from-violet-500 to-purple-600',
@@ -1314,7 +1315,8 @@ function renderSubmitArea(alreadySolved) {
   }
   area.innerHTML = `
     <button class="submit-btn" onclick="submitAnswer()">Nộp đáp án →</button>
-    <p class="text-xs text-gray-400 text-center mt-2">Mỗi lần nộp sai sẽ bị phạt +20 phút khi tính điểm</p>`;
+    <p class="text-xs text-gray-400 text-center mt-2">Mỗi lần nộp sai sẽ bị phạt +20 phút khi tính điểm</p>
+    <p id="submitErrorMsg" class="hidden text-xs text-red-500 text-center mt-1 font-medium"></p>`;
 }
 
 function renderHistory(q, history) {
@@ -1339,6 +1341,14 @@ function renderHistory(q, history) {
       <span class="text-gray-300 ml-auto">${new Date(s.submitted_at).toLocaleTimeString('vi-VN')}</span>
     </div>`;
   }).join('');
+}
+
+function showSubmitError(msg) {
+  const el = document.getElementById('submitErrorMsg');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
 }
 
 async function submitAnswer() {
@@ -1376,9 +1386,14 @@ async function submitAnswer() {
   const data = await res.json();
 
   if (!res.ok) {
-    if (btn) { btn.disabled = false; btn.textContent = 'Nộp đáp án →'; }
     if (data.alreadySolved) { renderSubmitArea(true); return; }
-    alert(data.error || 'Có lỗi xảy ra');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = res.status === 429 ? 'Chờ chút…' : 'Nộp đáp án →';
+      if (res.status === 429) setTimeout(() => { btn.disabled = false; btn.textContent = 'Nộp đáp án →'; }, SUBMIT_COOLDOWN_MS);
+      else btn.disabled = false;
+    }
+    showSubmitError(data.error || 'Có lỗi xảy ra');
     return;
   }
 

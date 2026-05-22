@@ -3,6 +3,27 @@ const supabase = require('../supabase');
 const { getToken, setToken } = require('../cache');
 const router = express.Router();
 
+// Rate limit: mỗi participant chỉ nộp 1 lần / 2 giây cho cùng một câu hỏi
+const submitCooldown = new Map();
+const COOLDOWN_MS = 2000;
+
+function checkRateLimit(participantId, questionId) {
+  const key = `${participantId}:${questionId}`;
+  const last = submitCooldown.get(key) || 0;
+  const now = Date.now();
+  if (now - last < COOLDOWN_MS) return false;
+  submitCooldown.set(key, now);
+  return true;
+}
+
+// Dọn Map định kỳ để tránh memory leak (giữ tối đa 5 phút)
+setInterval(() => {
+  const cutoff = Date.now() - 300_000;
+  for (const [key, ts] of submitCooldown) {
+    if (ts < cutoff) submitCooldown.delete(key);
+  }
+}, 60_000);
+
 async function getParticipant(token) {
   if (!token) return null;
   const cached = getToken(token);
@@ -26,6 +47,10 @@ router.post('/', async (req, res) => {
   const { questionId, answerIndex, answer } = req.body;
   if (questionId === undefined) {
     return res.status(400).json({ error: 'questionId bắt buộc' });
+  }
+
+  if (!checkRateLimit(participant.id, questionId)) {
+    return res.status(429).json({ error: 'Bạn nộp quá nhanh, vui lòng chờ vài giây rồi thử lại.' });
   }
 
   const [cqResult, contestResult, existingResult] = await Promise.all([
