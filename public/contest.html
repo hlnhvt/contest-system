@@ -825,6 +825,7 @@ let _prevWasUpcoming = null;
 let _contestStarted = false;
 let _lobbyPollInterval = null;
 let _scoreboardPollInterval = null;
+let penaltyUnit = 20;
 
 const CHOICE_LABELS = ['A','B','C','D','E','F','G','H'];
 const SUBMIT_COOLDOWN_MS = 2000;
@@ -988,6 +989,9 @@ async function loadScoreboard(updatedParticipantId) {
   const viewerQuery = myParticipantId ? `?viewerId=${myParticipantId}` : '';
   const res = await fetch(`/api/contests/${CONTEST_ID}/scoreboard${viewerQuery}`);
   const data = await res.json();
+  if (data && typeof data.penaltyUnit === 'number') {
+    penaltyUnit = data.penaltyUnit;
+  }
 
   const freezeBanner = document.getElementById('freezeBanner');
   const isFrozenState = data.freeze?.active;
@@ -1473,7 +1477,7 @@ function renderSubmitArea(alreadySolved) {
   }
   area.innerHTML = `
     <button class="submit-btn" onclick="submitAnswer()">Nộp đáp án →</button>
-    <p class="text-xs text-gray-400 text-center mt-2">Mỗi lần nộp sai sẽ bị phạt +20 phút khi tính điểm</p>
+    <p class="text-xs text-gray-400 text-center mt-2">Mỗi lần nộp sai sẽ bị phạt +${penaltyUnit} phút khi tính điểm</p>
     <p id="submitErrorMsg" class="hidden text-xs text-red-500 text-center mt-1 font-medium"></p>`;
 }
 
@@ -1577,7 +1581,7 @@ async function submitAnswer() {
     banner.innerHTML = `<div class="verdict-wrong flex items-start gap-3">
       <svg class="w-7 h-7 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <div><div class="font-bold text-red-600 text-base">Chưa đúng rồi!</div>
-      <div class="text-red-500 text-sm mt-0.5">Hãy thử lại. Mỗi lần sai thêm +20 phút phạt nếu giải được.</div></div>
+      <div class="text-red-500 text-sm mt-0.5">Hãy thử lại. Mỗi lần sai thêm +${penaltyUnit} phút phạt nếu giải được.</div></div>
     </div>`;
     if (qType === 'single' && selectedAnswer !== null) {
       document.getElementById(`choice-${selectedAnswer}`)?.classList.remove('selected');

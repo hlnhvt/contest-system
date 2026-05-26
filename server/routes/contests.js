@@ -41,6 +41,8 @@ router.get('/:id/scoreboard', async (req, res) => {
   // Tính thời điểm đóng băng = 4/5 thời gian thi
   const startMs = new Date(contest.start_time).getTime();
   const endMs   = new Date(contest.end_time).getTime();
+  const durationMinutes = Math.max(1, Math.floor((endMs - startMs) / 60000));
+  const penaltyUnit = Math.max(1, Math.round(durationMinutes / 15));
   const freezeMs = startMs + Math.floor((endMs - startMs) * 4 / 5);
   const freezeTime = new Date(freezeMs);
   const now = new Date();
@@ -131,7 +133,7 @@ router.get('/:id/scoreboard', async (req, res) => {
       // Tổng số bài và thời gian luôn tính theo kết quả ĐÓNG BĂNG để giữ nguyên thứ hạng
       if (qs.solved) {
         totalSolved++;
-        const penalty = qs.solveTime + qs.wrongBefore * 20;
+        const penalty = qs.solveTime + qs.wrongBefore * penaltyUnit;
         totalPenalty += penalty;
       }
 
@@ -187,6 +189,8 @@ router.get('/:id/scoreboard', async (req, res) => {
   res.json({
     questions,
     rows,
+    penaltyUnit,
+    durationMinutes,
     freeze: {
       active: freezeActive,
       isPublished,
