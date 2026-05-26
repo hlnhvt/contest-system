@@ -195,6 +195,16 @@ router.get('/:id/scoreboard', async (req, res) => {
   });
 });
 
+router.get('/:id/participants', async (req, res) => {
+  const { data, error } = await supabase
+    .from('participants')
+    .select('id, nickname, organization, joined_at')
+    .eq('contest_id', req.params.id)
+    .order('joined_at', { ascending: true });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data || []);
+});
+
 router.get('/:id/evaluation', async (req, res) => {
   const contestId = req.params.id;
   const participantId = req.query.participantId;
@@ -311,6 +321,48 @@ router.get('/:id/evaluation', async (req, res) => {
   const evalText = `<p>${summaryLine} ${qualLine}</p>${bParts ? `<p class="mt-2 text-xs text-gray-500">Phân tích theo độ khó — ${bParts}.</p>` : ''}${notesHtml}`;
 
   res.json({ score, total, pct, wPct, level, breakdown, evalText });
+});
+
+// Cập nhật thông tin thí sinh (chỉ cho phép khi chưa bắt đầu thi)
+router.put('/:id/participants/:participantId', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Chưa xác thực' });
+
+  // Kiểm tra participant từ token
+  const { data: participant } = await supabase
+    .from('participants')
+    .select('*')
+    .eq('token', token)
+    .single();
+
+  if (!participant || participant.id !== req.params.participantId || participant.contest_id !== req.params.id) {
+    return res.status(403).json({ error: 'Không có quyền cập nhật' });
+  }
+
+  // Kiểm tra thời gian cuộc thi
+  const { data: contest } = await supabase.from('contests').select('start_time').eq('id', participant.contest_id).single();
+  if (!contest) return res.status(404).json({ error: 'Không tìm thấy cuộc thi' });
+  
+  if (new Date() >= new Date(contest.start_time)) {
+    return res.status(400).json({ error: 'Cuộc thi đã bắt đầu, không thể đổi thông tin.' });
+  }
+
+  const { nickname, organization } = req.body;
+  if (!nickname || nickname.trim() === '') {
+    return res.status(400).json({ error: 'Biệt danh không được để trống' });
+  }
+
+  const { error } = await supabase
+    .from('participants')
+    .update({ nickname: nickname.trim(), organization: organization ? organization.trim() : '' })
+    .eq('id', participant.id);
+
+  if (error) {
+    if (error.code === '23505') return res.status(400).json({ error: 'Biệt danh này đã được sử dụng trong cuộc thi.' });
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ ok: true });
 });
 
 module.exports = router;

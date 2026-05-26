@@ -543,7 +543,6 @@ async function loadContests() {
   el.innerHTML = `<div class="space-y-4">` + contests.map((c, i) => {
     const s = getStatus(c);
     const dur = getDuration(c.start_time, c.end_time);
-    const canJoin = s === 'running';
     return `
     <div class="contest-card animate-fade-up stagger-${Math.min(i+1,5)}">
       <div class="p-6">
@@ -573,19 +572,23 @@ async function loadContests() {
                   class="px-4 py-2 border-2 border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors">
                   Xem kết quả
                 </button>`
-              : canJoin
+              : s === 'running'
                 ? `<button onclick="openJoin('${c.id}','${esc(c.name)}', ${!!c.require_login})"
                     class="join-btn px-5 py-2.5 text-sm">
                     Tham gia →
                   </button>`
-                : `<button disabled class="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed">
-                    Chưa bắt đầu
+              : s === 'upcoming'
+                ? `<button onclick="openJoin('${c.id}','${esc(c.name)}', ${!!c.require_login})"
+                    class="px-5 py-2.5 border-2 border-blue-300 text-blue-600 rounded-xl text-sm font-semibold hover:bg-blue-50 transition-colors">
+                    Đăng ký trước
                   </button>`
+                : ''
             }
           </div>
         </div>
       </div>
       ${s === 'running' ? `<div class="h-0.5 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400"></div>` : ''}
+      ${s === 'upcoming' ? `<div class="h-0.5 bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-400"></div>` : ''}
     </div>`;
   }).join('') + `</div>`;
 }

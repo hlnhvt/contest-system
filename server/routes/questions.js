@@ -12,7 +12,7 @@ router.get('/contest/:contestId', async (req, res) => {
 
   const { data, error } = await supabase
     .from('contest_questions')
-    .select('label, order_num, question:questions(id, title, description, choices, question_type, correct_answer)')
+    .select('label, order_num, question:questions(id, title, description, choices, question_type, correct_answer, topic_group:topic_groups(id, name))')
     .eq('contest_id', contestId)
     .order('order_num');
 
@@ -28,7 +28,8 @@ router.get('/contest/:contestId', async (req, res) => {
       title:      q.title,
       description:q.description,
       choices:    q.choices,
-      question_type: qType
+      question_type: qType,
+      topic_group: q.topic_group || null
     };
     // Matching: expose shuffled right-side options without the correct pairing
     if (qType === 'matching' && Array.isArray(q.correct_answer)) {
@@ -45,7 +46,7 @@ router.get('/contest/:contestId', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('questions')
-    .select('id, title, description, choices, question_type, correct_answer')
+    .select('id, title, description, choices, question_type, correct_answer, topic_group:topic_groups(id, name)')
     .eq('id', req.params.id)
     .single();
 
@@ -57,7 +58,8 @@ router.get('/:id', async (req, res) => {
     title:       data.title,
     description: data.description,
     choices:     data.choices,
-    question_type: qType
+    question_type: qType,
+    topic_group: data.topic_group || null
   };
   if (qType === 'matching' && Array.isArray(data.correct_answer)) {
     out.match_options = [...data.correct_answer].sort();

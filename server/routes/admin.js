@@ -158,31 +158,119 @@ router.post('/contests/:contestId/questions', async (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Question Bank ─────────────────────────────────────────
-router.get('/questions', async (req, res) => {
-  const { data, error } = await supabase
-    .from('questions')
-    .select('*')
-    .order('created_at', { ascending: false });
+// ── Participants ──────────────────────────────────────────
+router.get('/contests/:contestId/participants', async (req, res) => {
+  const { contestId } = req.params;
+  const { data: participants, error } = await supabase
+    .from('participants')
+    .select('id, nickname, organization, joined_at')
+    .eq('contest_id', contestId)
+    .order('joined_at', { ascending: true });
+  if (error) return res.status(500).json({ error: error.message });
+
+  // Đếm số bài nộp cho mỗi thí sinh
+  const { data: counts } = await supabase
+    .from('submissions')
+    .select('participant_id, status')
+    .eq('contest_id', contestId);
+
+  const countMap = {};
+  for (const s of (counts || [])) {
+    if (!countMap[s.participant_id]) countMap[s.participant_id] = { total: 0, correct: 0 };
+    countMap[s.participant_id].total++;
+    if (s.status === 'correct') countMap[s.participant_id].correct++;
+  }
+
+  res.json((participants || []).map(p => ({
+    ...p,
+    totalSubmissions: countMap[p.id]?.total || 0,
+    correctSubmissions: countMap[p.id]?.correct || 0,
+  })));
+});
+
+router.delete('/contests/:contestId/participants/:participantId', async (req, res) => {
+  const { contestId, participantId } = req.params;
+  // Xoá submissions trước (tránh FK constraint)
+  await supabase.from('submissions')
+    .delete()
+    .eq('contest_id', contestId)
+    .eq('participant_id', participantId);
+  const { error } = await supabase.from('participants')
+    .delete()
+    .eq('id', participantId)
+    .eq('contest_id', contestId);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+// ── Topic Groups ──────────────────────────────────────────
+router.get('/topic-groups', async (req, res) => {
+  const { data, error } = await supabase.from('topic_groups').select('*').order('name');
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
 
+router.post('/topic-groups', async (req, res) => {
+  const { name, description } = req.body;
+  if (!name) return res.status(400).json({ error: 'Tên nhóm chủ đề không được để trống' });
+  const { data, error } = await supabase.from('topic_groups')
+    .insert({ name, description: description || '' })
+    .select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+router.put('/topic-groups/:id', async (req, res) => {
+  const { name, description } = req.body;
+  const { data, error } = await supabase.from('topic_groups')
+    .update({ name, description })
+    .eq('id', req.params.id).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+router.delete('/topic-groups/:id', async (req, res) => {
+  const { count } = await supabase.from('question_topic_groups')
+    .select('question_id', { count: 'exact', head: true })
+    .eq('topic_group_id', req.params.id);
+  if (count > 0) {
+    return res.status(400).json({ error: 'Nhóm chủ đề đang được sử dụng bởi các câu hỏi, không thể xoá' });
+  }
+  const { error } = await supabase.from('topic_groups').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+// ── Question Bank ─────────────────────────────────────────
+router.get('/questions', async (req, res) => {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*, question_topic_groups(topic_group:topic_groups(id, name))')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  
+  const formatted = data.map(q => {
+    const topic_groups = (q.question_topic_groups || [])
+      .map(qtg => qtg.topic_group)
+      .filter(Boolean);
+    delete q.question_topic_groups;
+    return { ...q, topic_groups };
+  });
+  res.json(formatted);
+});
+
 router.post('/questions', async (req, res) => {
-  const { title, description, choices, correct_index, correct_answer, question_type, explanation, tags, difficulty } = req.body;
+  const { title, description, choices, correct_index, correct_answer, question_type, explanation, tags, difficulty, topic_group_ids } = req.body;
   if (!title || !description || !choices || choices.length < 2) {
     return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
   }
   const qType = question_type || 'single';
-  if (qType === 'single' && correct_index === undefined) {
-    return res.status(400).json({ error: 'Thiếu đáp án đúng' });
-  }
   const { data, error } = await supabase.from('questions')
     .insert({
       title, description, choices,
-      question_type: qType,
-      correct_index: qType === 'single' ? correct_index : null,
+      correct_index: qType === 'single' ? (correct_index ?? 0) : 0,
       correct_answer: qType !== 'single' ? (correct_answer ?? null) : null,
+      question_type: qType,
       explanation: explanation || '',
       tags: tags || [],
       difficulty: difficulty || 0,
@@ -190,25 +278,38 @@ router.post('/questions', async (req, res) => {
     })
     .select().single();
   if (error) return res.status(500).json({ error: error.message });
+  
+  if (topic_group_ids && topic_group_ids.length > 0) {
+    const mappings = topic_group_ids.map(tid => ({ question_id: data.id, topic_group_id: tid }));
+    await supabase.from('question_topic_groups').insert(mappings);
+  }
   res.json(data);
 });
 
-router.put('/questions/:id', async (req, res) => {
-  const { title, description, choices, correct_index, correct_answer, question_type, explanation, tags, difficulty } = req.body;
-  const qType = question_type || 'single';
-  const { data, error } = await supabase.from('questions')
-    .update({
-      title, description, choices,
-      question_type: qType,
-      correct_index: qType === 'single' ? correct_index : null,
-      correct_answer: qType !== 'single' ? (correct_answer ?? null) : null,
-      explanation, tags,
-      difficulty: difficulty ?? 0
-    })
-    .eq('id', req.params.id).select().single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
+  router.put('/questions/:id', async (req, res) => {
+    const { title, description, choices, correct_index, correct_answer, question_type, explanation, tags, difficulty, topic_group_ids } = req.body;
+    const qType = question_type || 'single';
+    const { data, error } = await supabase.from('questions')
+      .update({
+        title, description, choices,
+        correct_index: qType === 'single' ? (correct_index ?? 0) : 0,
+        correct_answer: qType !== 'single' ? (correct_answer ?? null) : null,
+        question_type: qType,
+        explanation, tags,
+        difficulty: difficulty ?? 0
+      })
+      .eq('id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+
+    if (topic_group_ids !== undefined) {
+      await supabase.from('question_topic_groups').delete().eq('question_id', req.params.id);
+      if (topic_group_ids.length > 0) {
+        const mappings = topic_group_ids.map(tid => ({ question_id: req.params.id, topic_group_id: tid }));
+        await supabase.from('question_topic_groups').insert(mappings);
+      }
+    }
+    res.json(data);
+  });
 
 router.patch('/questions/:id/bookmark', async (req, res) => {
   const { is_bookmarked } = req.body;
@@ -239,25 +340,48 @@ router.post('/questions/import', async (req, res) => {
     return res.status(400).json({ error: 'Dữ liệu import không hợp lệ' });
   }
 
+  // Pre-process and find unique topic group names
+  const parsedQuestions = questions.map(q => {
+    const topicNames = q.topic_group_name ? String(q.topic_group_name).split(',').map(n => n.trim()).filter(Boolean) : [];
+    return { ...q, topicNames };
+  });
+  const uniqueTopicNames = [...new Set(parsedQuestions.flatMap(q => q.topicNames))];
+  const topicMap = {}; // name -> id
+  
+  if (uniqueTopicNames.length > 0) {
+    // Fetch existing topics
+    const { data: existingTopics } = await supabase.from('topic_groups').select('id, name').in('name', uniqueTopicNames);
+    const existingNames = new Set((existingTopics || []).map(t => t.name));
+    
+    // Create missing topics
+    const missingNames = uniqueTopicNames.filter(n => !existingNames.has(n));
+    if (missingNames.length > 0) {
+      const { data: newTopics } = await supabase.from('topic_groups')
+        .insert(missingNames.map(name => ({ name })))
+        .select('id, name');
+      (newTopics || []).forEach(t => topicMap[t.name] = t.id);
+    }
+    
+    // Populate map with existing topics
+    (existingTopics || []).forEach(t => topicMap[t.name] = t.id);
+  }
+
   const rows = [];
   const errors = [];
 
-  questions.forEach((q, idx) => {
+  parsedQuestions.forEach((q, idx) => {
     const qType = q.question_type || 'single';
     if (!q.title || !q.description || !Array.isArray(q.choices) || q.choices.length < 2) {
       errors.push(`Câu ${idx + 1}: Thiếu tiêu đề, nội dung hoặc ít nhất 2 đáp án`);
       return;
     }
-    if (qType === 'single' && (q.correct_index === undefined || q.correct_index === null || q.correct_index === '')) {
-      errors.push(`Câu ${idx + 1}: Loại "single" cần có correct_index`);
-      return;
-    }
+
     rows.push({
       title: String(q.title).trim(),
       description: String(q.description).trim(),
       choices: q.choices.map(c => String(c).trim()),
       question_type: qType,
-      correct_index: qType === 'single' ? Number(q.correct_index) : null,
+      correct_index: qType === 'single' ? Number(q.correct_index ?? 0) : 0,
       correct_answer: qType !== 'single' ? (q.correct_answer || null) : null,
       explanation: q.explanation || '',
       tags: Array.isArray(q.tags) ? q.tags : (q.tags ? String(q.tags).split(',').map(t => t.trim()).filter(Boolean) : []),
@@ -270,8 +394,23 @@ router.post('/questions/import', async (req, res) => {
     return res.status(400).json({ error: 'Không có câu hỏi hợp lệ nào để import', errors });
   }
 
-  const { data, error } = await supabase.from('questions').insert(rows).select();
+  const { data, error } = await supabase.from('questions').insert(rows).select('id');
   if (error) return res.status(500).json({ error: error.message });
+
+  const mappings = [];
+  parsedQuestions.forEach((q, idx) => {
+    if (q.topicNames && q.topicNames.length > 0 && data[idx]) {
+      q.topicNames.forEach(name => {
+        if (topicMap[name]) {
+          mappings.push({ question_id: data[idx].id, topic_group_id: topicMap[name] });
+        }
+      });
+    }
+  });
+  if (mappings.length > 0) {
+    await supabase.from('question_topic_groups').insert(mappings);
+  }
+
   res.json({ imported: data.length, errors });
 });
 

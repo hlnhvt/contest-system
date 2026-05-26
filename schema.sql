@@ -68,6 +68,25 @@ CREATE TABLE questions (
 -- ALTER TABLE participants ADD COLUMN IF NOT EXISTS organization TEXT DEFAULT '';
 -- Migration v5 - scoring scale cho contests
 -- ALTER TABLE contests ADD COLUMN IF NOT EXISTS scoring_scale JSONB DEFAULT NULL;
+-- Migration v6 - topic groups:
+-- CREATE TABLE IF NOT EXISTS topic_groups (
+--   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+--   name TEXT NOT NULL UNIQUE,
+--   description TEXT DEFAULT '',
+--   created_at TIMESTAMPTZ DEFAULT NOW()
+-- );
+-- ALTER TABLE topic_groups ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "public_read_topic_groups" ON topic_groups FOR SELECT USING (true);
+-- 
+-- CREATE TABLE IF NOT EXISTS question_topic_groups (
+--   question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
+--   topic_group_id UUID REFERENCES topic_groups(id) ON DELETE CASCADE,
+--   PRIMARY KEY (question_id, topic_group_id)
+-- );
+-- ALTER TABLE question_topic_groups ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "public_read_qtg" ON question_topic_groups FOR SELECT USING (true);
+-- 
+-- ALTER TABLE questions DROP COLUMN IF EXISTS topic_group_id;
 
 -- Liên kết câu hỏi vào contest (với label A, B, C...)
 CREATE TABLE contest_questions (

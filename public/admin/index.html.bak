@@ -704,11 +704,6 @@
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg></span> Bộ ôn tập
           </button>
-          <button class="nav-item" id="nav-topicgroups" onclick="showTab('topicgroups')">
-            <span class="icon"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg></span> Nhóm chủ đề
-          </button>
         </nav>
 
         <!-- Bottom -->
@@ -724,20 +719,6 @@
 
       <!-- Main content -->
       <main class="flex-1 ml-[220px] p-6">
-
-        <!-- TOPIC GROUPS TAB -->
-        <div id="pane-topicgroups" class="hidden">
-          <div class="flex items-center justify-between mb-6 animate-fade-up">
-            <div>
-              <h2 class="text-xl font-bold text-gray-900">Nhóm chủ đề</h2>
-              <p class="text-gray-400 text-sm mt-0.5">Quản lý phân loại chủ đề (BA, Dev, PM, SA...)</p>
-            </div>
-            <button onclick="openTopicGroupModal()" class="btn-success flex items-center gap-2">
-              <span>+</span> Thêm chủ đề mới
-            </button>
-          </div>
-          <div id="topicGroupList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
 
         <!-- CONTESTS TAB -->
         <div id="pane-contests">
@@ -811,9 +792,6 @@
                 oninput="filterQuestions()" class="field"
                 style="border-radius:12px;padding:10px 16px 10px 38px;font-size:14px;min-width:260px" />
             </div>
-            <select id="qFilterTopic" class="field" onchange="filterQuestions()" style="border-radius:12px;padding:7px 12px;font-size:12px;width:150px;min-width:auto;margin-right:8px;">
-              <option value="">Tất cả chủ đề</option>
-            </select>
             <button id="btnFilterBookmark" onclick="toggleBookmarkFilter()"
               class="btn-sm btn-bookmark-off flex items-center gap-1.5" style="padding:7px 12px;font-size:12px">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1133,44 +1111,6 @@
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Danh sách câu hỏi</p>
           <div id="pdQuestions" class="space-y-2"></div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Create/Edit Topic Group Modal -->
-  <div id="topicGroupModal" class="modal-overlay hidden">
-    <div class="modal-box max-w-md p-6">
-      <div class="flex items-center justify-between mb-5">
-        <h3 id="topicGroupModalTitle" class="text-lg font-bold text-gray-900">Thêm chủ đề</h3>
-        <button onclick="closeTopicGroupModal()" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <div class="space-y-4">
-        <div>
-          <label class="lbl">Tên chủ đề *</label>
-          <input id="tgName" type="text" class="field" placeholder="VD: BA, Dev, PM, SA" />
-        </div>
-        <div>
-          <label class="lbl">Mô tả (không bắt buộc)</label>
-          <input id="tgDescription" type="text" class="field" placeholder="Mô tả ngắn gọn" />
-        </div>
-        <p id="tgModalError" class="text-red-500 text-sm font-medium hidden"></p>
-        <div class="flex justify-end gap-3 mt-6">
-          <button onclick="closeTopicGroupModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">Hủy</button>
-          <button onclick="saveTopicGroup()" class="btn-primary">Lưu lại</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Create/Edit Question Modal -->
-        <div>
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Danh sách câu hỏi</p>
-          <div id="pdQuestions" class="space-y-2"></div>
-        </div>
         <!-- Scoring scale -->
         <div id="pdScaleWrap" class="hidden">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Thang điểm đánh giá</p>
@@ -1392,12 +1332,6 @@
         <!-- Common: explanation, tags, difficulty -->
         <div><label class="lbl">Giải thích đáp án (tuỳ chọn)</label><textarea id="qExplanation" rows="2" class="field"
             placeholder="Giải thích tại sao đáp án đó đúng..."></textarea></div>
-        <div>
-          <label class="lbl">Nhóm chủ đề</label>
-          <div id="qTopicGroupList" class="flex flex-wrap gap-3 mt-1.5 border border-gray-200 rounded-xl p-3 bg-gray-50 min-h-[42px] max-h-32 overflow-y-auto">
-            <!-- Checkboxes will be injected here -->
-          </div>
-        </div>
         <div><label class="lbl">Tags (phân cách bằng dấu phẩy)</label><input id="qTags" class="field"
             placeholder="VD: toán học, thuật toán, logic" /></div>
         <div>
@@ -1661,8 +1595,6 @@
 
   <script>
     let adminPassword = '';
-    let topicGroups = [];
-    let currentTopicGroupFilter = '';
     let allContests = [];
     let allQuestions = [];
     let assignContestId = '';
@@ -1733,12 +1665,10 @@
     }
 
     async function loadAll() {
-      const [cr, qr, pr, tr] = await Promise.all([api('/contests'), api('/questions'), api('/practice-sets'), api('/topic-groups')]);
+      const [cr, qr, pr] = await Promise.all([api('/contests'), api('/questions'), api('/practice-sets')]);
       allContests = await cr.json();
       allQuestions = await qr.json();
       allPracticeSets = pr.ok ? await pr.json() : [];
-      topicGroups = tr.ok ? await tr.json() : [];
-      renderTopicGroupSelects();
       selectedQIds.clear();
       renderContests();
       filterQuestions();
@@ -1747,15 +1677,14 @@
 
     // ── Tabs ──────────────────────────────────────
     function showTab(tab) {
-      ['contests', 'questions', 'submissions', 'airequests', 'practice', 'topicgroups'].forEach(t => {
+      ['contests', 'questions', 'submissions', 'airequests', 'practice'].forEach(t => {
         document.getElementById(`pane-${t}`).classList.toggle('hidden', t !== tab);
         const nav = document.getElementById(`nav-${t}`);
-        if(nav) nav.className = t === tab ? 'nav-item active' : 'nav-item';
+        nav.className = t === tab ? 'nav-item active' : 'nav-item';
       });
       if (tab === 'submissions') loadSubmissions();
       if (tab === 'airequests') loadAIRequests();
       if (tab === 'practice') loadPracticeSets();
-      if (tab === 'topicgroups') renderTopicGroups();
     }
 
     // ── Contests ──────────────────────────────────
@@ -2029,7 +1958,7 @@
               <td class="py-2.5 text-center">
                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${p.correctSubmissions > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-400'}">${p.correctSubmissions}</span>
               </td>
-              <td class="py-2.5 text-gray-400 text-xs"></td>
+              <td class="py-2.5 text-gray-400 text-xs">${fmtDate(p.created_at)}</td>
               <td class="py-2.5 text-right">
                 <button onclick="deleteParticipant('${p.id}','${esc(p.nickname)}')"
                   class="btn-sm btn-delete" style="padding:4px 10px;font-size:11px">Xoá</button>
@@ -2186,122 +2115,6 @@
       alert(`Đã lưu ${questions.length} câu hỏi vào kỳ thi!`);
     }
 
-    // ── TOPIC GROUPS ──
-    async function loadTopicGroups() {
-      const data = await api('/topic-groups');
-      if (data) {
-        topicGroups = data;
-        renderTopicGroupSelects();
-      }
-    }
-
-    function renderTopicGroupSelects() {
-      // 1. Render Filter Select
-      const filterSel = document.getElementById('qFilterTopic');
-      if (filterSel) {
-        filterSel.innerHTML = `<option value="">Tất cả chủ đề</option>` +
-          topicGroups.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
-        filterSel.value = currentTopicGroupFilter;
-      }
-      // 2. Render Checkboxes for Question Modal
-      const tgList = document.getElementById('qTopicGroupList');
-      if (tgList) {
-        if (topicGroups.length === 0) {
-          tgList.innerHTML = '<span class="text-xs text-gray-400 italic">Chưa có nhóm chủ đề nào</span>';
-        } else {
-          tgList.innerHTML = topicGroups.map(t => `
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" value="${t.id}" class="q-topic-checkbox w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
-              <span class="text-sm text-gray-700">${esc(t.name)}</span>
-            </label>
-          `).join('');
-        }
-      }
-    }
-
-    function renderTopicGroups() {
-      const list = document.getElementById('topicGroupList');
-      if (!list) return;
-      if (topicGroups.length === 0) {
-        list.innerHTML = '<div class="col-span-full p-8 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">Chưa có nhóm chủ đề nào</div>';
-        return;
-      }
-      list.innerHTML = topicGroups.map(t => `
-        <div class="card p-4 hover:-translate-y-1 transition-transform">
-          <h3 class="font-bold text-gray-800 text-lg mb-1">${esc(t.name)}</h3>
-          <p class="text-sm text-gray-500 mb-4 h-10 line-clamp-2">${esc(t.description || 'Không có mô tả')}</p>
-          <div class="flex gap-2 justify-end pt-3 border-t border-gray-100">
-            <button onclick="editTopicGroup('${t.id}')" class="btn-sm btn-edit">Sửa</button>
-            <button onclick="deleteTopicGroup('${t.id}')" class="btn-sm btn-delete">Xóa</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    let editingTopicGroupId = null;
-    function openTopicGroupModal() {
-      editingTopicGroupId = null;
-      document.getElementById('topicGroupModalTitle').textContent = 'Thêm chủ đề';
-      document.getElementById('tgName').value = '';
-      document.getElementById('tgDescription').value = '';
-      document.getElementById('tgModalError').classList.add('hidden');
-      document.getElementById('topicGroupModal').classList.remove('hidden');
-    }
-
-    function editTopicGroup(id) {
-      const t = topicGroups.find(x => x.id === id);
-      if (!t) return;
-      editingTopicGroupId = id;
-      document.getElementById('topicGroupModalTitle').textContent = 'Sửa chủ đề';
-      document.getElementById('tgName').value = t.name;
-      document.getElementById('tgDescription').value = t.description || '';
-      document.getElementById('tgModalError').classList.add('hidden');
-      document.getElementById('topicGroupModal').classList.remove('hidden');
-    }
-
-    function closeTopicGroupModal() {
-      document.getElementById('topicGroupModal').classList.add('hidden');
-    }
-
-    async function saveTopicGroup() {
-      const name = document.getElementById('tgName').value.trim();
-      const description = document.getElementById('tgDescription').value.trim();
-      const errEl = document.getElementById('tgModalError');
-      errEl.classList.add('hidden');
-
-      if (!name) {
-        errEl.textContent = 'Vui lòng nhập tên chủ đề';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
-      const method = editingTopicGroupId ? 'PUT' : 'POST';
-      const path = editingTopicGroupId ? `/topic-groups/${editingTopicGroupId}` : '/topic-groups';
-      
-      const res = await api(path, { method, body: { name, description } });
-      if (res.error) {
-        errEl.textContent = res.error;
-        errEl.classList.remove('hidden');
-      } else {
-        closeTopicGroupModal();
-        await loadTopicGroups();
-        renderTopicGroups();
-        filterQuestions();
-      }
-    }
-
-    async function deleteTopicGroup(id) {
-      if (!confirm('Bạn có chắc chắn muốn xóa chủ đề này?')) return;
-      const res = await api(`/topic-groups/${id}`, { method: 'DELETE' });
-      if (res.error) {
-        alert('Lỗi: ' + res.error);
-      } else {
-        await loadTopicGroups();
-        renderTopicGroups();
-        filterQuestions();
-      }
-    }
-
     // ── Questions ─────────────────────────────────
     function setQListLoading(on, msg = '') {
       let overlay = document.getElementById('qListOverlay');
@@ -2372,7 +2185,6 @@
             ${isBookmarked ? `<svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>` : ''}
           </div>
           ${q.tags?.length ? `<div class="flex flex-wrap gap-1 mt-1">${q.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
-          ${q.topic_groups?.length ? `<div class="flex flex-wrap gap-1 mt-1">${q.topic_groups.map(tg => `<span class="tag bg-indigo-50 text-indigo-700 font-semibold">\uD83D\uDCC1 ${esc(tg.name)}</span>`).join('')}</div>` : ''}
           ${starsHtml}
         </div>
       </div>
@@ -2462,13 +2274,11 @@
     }
 
     function filterQuestions() {
-      currentTopicGroupFilter = document.getElementById('qFilterTopic')?.value || '';
       const q = document.getElementById('qSearch').value.toLowerCase();
       let list = allQuestions;
       if (q) list = list.filter(x => x.title.toLowerCase().includes(q) || x.description.toLowerCase().includes(q) || (x.tags || []).join(' ').toLowerCase().includes(q));
       if (filterBookmarked) list = list.filter(x => !!x.is_bookmarked);
       if (filterDifficulty) list = list.filter(x => (x.difficulty || 0) === filterDifficulty);
-      if (currentTopicGroupFilter) list = list.filter(x => x.topic_groups?.some(tg => tg.id === currentTopicGroupFilter));
 
       // Sắp xếp
       const sort = document.getElementById('qSortBy')?.value || 'updated_desc';
@@ -2659,15 +2469,6 @@
         document.getElementById('qExplanation').value = q.explanation || '';
         document.getElementById('qTags').value = (q.tags || []).join(', ');
         modalDifficulty = q.difficulty || 0;
-        
-        // Reset and check topic groups
-        document.querySelectorAll('.q-topic-checkbox').forEach(cb => cb.checked = false);
-        if (q.topic_groups && q.topic_groups.length > 0) {
-          q.topic_groups.forEach(tg => {
-            const cb = document.querySelector(`.q-topic-checkbox[value="${tg.id}"]`);
-            if (cb) cb.checked = true;
-          });
-        }
 
         const qType = q.question_type || 'single';
         currentQType = qType;
@@ -2691,7 +2492,6 @@
         document.getElementById('qDesc').value = '';
         document.getElementById('qExplanation').value = '';
         document.getElementById('qTags').value = '';
-        document.getElementById('qTopicGroup').value = '';
         currentQType = 'single';
         singleChoices = ['', '', '', ''];
         singleCorrect = -1;
@@ -2721,8 +2521,7 @@
         question_type: currentQType,
         explanation: document.getElementById('qExplanation').value.trim(),
         tags: document.getElementById('qTags').value.split(',').map(s => s.trim()).filter(Boolean),
-        difficulty: modalDifficulty,
-        topic_group_ids: Array.from(document.querySelectorAll('.q-topic-checkbox:checked')).map(cb => cb.value)
+        difficulty: modalDifficulty
       };
 
       if (currentQType === 'single') {
