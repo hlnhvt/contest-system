@@ -1,6 +1,6 @@
 Chủ đề: Sự Thay Đổi Về Vai Trò Của BA Trong Kỷ Nguyên AI
 
-Phần 1: Khai mạc & Bối cảnh (15 phút)
+Phần 1: Khai mạc & Bối cảnh
 
 Tuyên bố lý do & Giới thiệu: Tại sao AI lại là "bước ngoặt" thay đổi cuộc chơi của mọi ngành nghề, đặc biệt là quản lý yêu cầu và tối ưu quy trình. Giữa làn sóng AI có thể tự động hóa việc viết code, vẽ quy trình, thậm chí làm báo cáo... Điều gì khiến một BA thực thụ vẫn là nhân tố không thể thay thế?
 
@@ -104,7 +104,7 @@ Quan trọng hơn, AI không thể chịu trách nhiệm trước pháp luật h
 
 Nguyên tắc cốt lõi cho BA thời đại AI: "AI-First, but Not AI-Only" (Nghĩ đến AI trước, nhưng không lạm dụng).
 
-Phần 6: Bộ kỹ năng mới (New Skills) của BA thời đại AI (30 phút)
+Phần 6: Bộ kỹ năng mới (New Skills) của BA thời đại AI
 
 Để không bị đào thải, BA cần nâng cấp "vũ khí" của mình:
 
@@ -120,7 +120,7 @@ Critical Thinking (Tư duy phản biện): AI có thể "ảo tưởng, BA phả
 
 Empathy & Stakeholder Management: AI không thể thấu hiểu nỗi đau (pain-point) thực sự của khách hàng hay khéo léo đàm phán giữa các bên như con người.
 
-Phần 7: Thảo luận bàn tròn (Panel Discussion) & Q&A (30 phút)
+Phần 7: Thảo luận bàn tròn (Panel Discussion) & Q&A 
 
 Chủ đề thảo luận gợi ý: "AI sẽ thay thế BA hay BA biết dùng AI sẽ thay thế BA không biết dùng AI?"
 

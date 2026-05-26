@@ -1594,13 +1594,7 @@ async function submitAnswer() {
       <div><div class="font-bold text-red-600 text-base">Chưa đúng rồi!</div>
       <div class="text-red-500 text-sm mt-0.5">Hãy thử lại. Mỗi lần sai thêm +${penaltyUnit} phút phạt nếu giải được.</div></div>
     </div>`;
-    if (qType === 'single' && selectedAnswer !== null) {
-      document.getElementById(`choice-${selectedAnswer}`)?.classList.remove('selected');
-      selectedAnswer = null;
-    } else if (qType === 'multiple') {
-      selectedAnswer = [];
-    }
-    // matching & ordering: keep selectedAnswer so DOM stays in sync and user can adjust
+    // Keep selectedAnswer so DOM stays in sync and user can adjust
     if (btn) { btn.disabled = false; btn.textContent = 'Nộp đáp án →'; }
     const history = await fetch(`/api/submissions/question/${currentQuestion.id}`, {
       headers: { 'Authorization': `Bearer ${token}` }

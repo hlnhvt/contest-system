@@ -2285,6 +2285,7 @@
         errEl.classList.remove('hidden');
       } else {
         closeTopicGroupModal();
+        await loadAll();
         await loadTopicGroups();
         renderTopicGroups();
         filterQuestions();
@@ -2297,6 +2298,7 @@
       if (res.error) {
         alert('Lỗi: ' + res.error);
       } else {
+        await loadAll();
         await loadTopicGroups();
         renderTopicGroups();
         filterQuestions();
@@ -2692,7 +2694,7 @@
         document.getElementById('qDesc').value = '';
         document.getElementById('qExplanation').value = '';
         document.getElementById('qTags').value = '';
-        document.getElementById('qTopicGroup').value = '';
+        document.querySelectorAll('.q-topic-checkbox').forEach(cb => cb.checked = false);
         currentQType = 'single';
         singleChoices = ['', '', '', ''];
         singleCorrect = -1;
@@ -2755,8 +2757,8 @@
       const res = await api(id ? `/questions/${id}` : '/questions', { method: id ? 'PUT' : 'POST', body });
       const data = await res.json();
       if (!res.ok) { showErr('questionModalError', data.error); return; }
+      await loadAll();
       document.getElementById('questionModal').classList.add('hidden');
-      loadAll();
     }
 
     async function deleteQuestion(id) {
@@ -2769,7 +2771,7 @@
       isDeleting = false;
       setQListLoading(false);
       if (!res.ok) { alert(data.error); return; }
-      loadAll();
+      await loadAll();
     }
 
     // ── Question Detail ───────────────────────────
@@ -3457,8 +3459,8 @@
       const method = editId ? 'PUT' : 'POST';
       const res = await api(url, { method, body });
       if (!res.ok) { const e = await res.json(); alert(e.error || 'Lỗi lưu'); return; }
+      await loadPracticeSets();
       closePracticeSetModal();
-      loadPracticeSets();
     }
 
     async function editPracticeSet(id) {
@@ -3547,7 +3549,8 @@
       if (!confirm('Xoá bộ ôn tập này? Toàn bộ kết quả liên quan cũng sẽ bị xoá.')) return;
       const res = await api(`/practice-sets/${id}`, { method: 'DELETE' });
       if (!res.ok) { const e = await res.json(); alert(e.error || 'Lỗi xoá'); return; }
-      loadPracticeSets();
+      await loadAll();
+      await loadPracticeSets();
     }
 
     async function viewPracticeResults(setId, setName) {
