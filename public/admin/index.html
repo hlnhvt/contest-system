@@ -1024,6 +1024,13 @@
           <div class="flex gap-2 mb-2">
             <input id="psQSearch" type="text" placeholder="Tìm câu hỏi..." class="field flex-1 text-xs py-1.5"
               oninput="filterPsQuestions()" />
+            <select id="psQSort" class="field flex-shrink-0 text-xs py-1.5 w-auto" onchange="filterPsQuestions()">
+              <option value="newest">Mới nhất</option>
+              <option value="oldest">Cũ nhất</option>
+              <option value="diff_desc">Khó nhất</option>
+              <option value="diff_asc">Dễ nhất</option>
+              <option value="selected_first">Đã chọn lên đầu</option>
+            </select>
             <span class="text-xs text-gray-400 self-center whitespace-nowrap" id="psQCount">0 đã chọn</span>
           </div>
           <div id="psQList" class="border border-gray-200 rounded-xl overflow-y-auto max-h-52 divide-y divide-gray-100">
@@ -1636,14 +1643,39 @@
         </div>
         <div>
           <label class="lbl">Lọc theo độ khó</label>
-          <select id="autoGenDiff" class="field">
-            <option value="">Ngẫu nhiên mọi độ khó</option>
-            <option value="1">1 sao (Rất dễ)</option>
-            <option value="2">2 sao (Dễ)</option>
-            <option value="3">3 sao (Trung bình)</option>
-            <option value="4">4 sao (Khó)</option>
-            <option value="5">5 sao (Rất khó)</option>
-          </select>
+          <div id="autoGenDiff" class="flex flex-col gap-1 mt-1">
+            <div class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition">
+              <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 w-full">
+                <input type="checkbox" value="1" class="w-4 h-4 rounded text-indigo-600 auto-gen-diff-cb" onchange="document.getElementById('autoGenDiffCount1').classList.toggle('hidden', !this.checked); if(!this.checked) document.getElementById('autoGenDiffCount1').value=''"> 1 sao (Rất dễ)
+              </label>
+              <input type="number" id="autoGenDiffCount1" min="1" class="field text-xs py-1 px-2 w-20 hidden" placeholder="Số câu">
+            </div>
+            <div class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition">
+              <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 w-full">
+                <input type="checkbox" value="2" class="w-4 h-4 rounded text-indigo-600 auto-gen-diff-cb" onchange="document.getElementById('autoGenDiffCount2').classList.toggle('hidden', !this.checked); if(!this.checked) document.getElementById('autoGenDiffCount2').value=''"> 2 sao (Dễ)
+              </label>
+              <input type="number" id="autoGenDiffCount2" min="1" class="field text-xs py-1 px-2 w-20 hidden" placeholder="Số câu">
+            </div>
+            <div class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition">
+              <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 w-full">
+                <input type="checkbox" value="3" class="w-4 h-4 rounded text-indigo-600 auto-gen-diff-cb" onchange="document.getElementById('autoGenDiffCount3').classList.toggle('hidden', !this.checked); if(!this.checked) document.getElementById('autoGenDiffCount3').value=''"> 3 sao (Trung bình)
+              </label>
+              <input type="number" id="autoGenDiffCount3" min="1" class="field text-xs py-1 px-2 w-20 hidden" placeholder="Số câu">
+            </div>
+            <div class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition">
+              <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 w-full">
+                <input type="checkbox" value="4" class="w-4 h-4 rounded text-indigo-600 auto-gen-diff-cb" onchange="document.getElementById('autoGenDiffCount4').classList.toggle('hidden', !this.checked); if(!this.checked) document.getElementById('autoGenDiffCount4').value=''"> 4 sao (Khó)
+              </label>
+              <input type="number" id="autoGenDiffCount4" min="1" class="field text-xs py-1 px-2 w-20 hidden" placeholder="Số câu">
+            </div>
+            <div class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition">
+              <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700 w-full">
+                <input type="checkbox" value="5" class="w-4 h-4 rounded text-indigo-600 auto-gen-diff-cb" onchange="document.getElementById('autoGenDiffCount5').classList.toggle('hidden', !this.checked); if(!this.checked) document.getElementById('autoGenDiffCount5').value=''"> 5 sao (Rất khó)
+              </label>
+              <input type="number" id="autoGenDiffCount5" min="1" class="field text-xs py-1 px-2 w-20 hidden" placeholder="Số câu">
+            </div>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Để trống mục Số câu nếu muốn chọn ngẫu nhiên trong độ khó đó.</p>
         </div>
       </div>
 
@@ -1928,7 +1960,11 @@
       document.getElementById('autoGenNameLabel').textContent = type === 'contest' ? 'kỳ thi' : 'bộ ôn tập';
       document.getElementById('autoGenName').value = '';
       document.getElementById('autoGenCount').value = '10';
-      document.getElementById('autoGenDiff').value = '';
+      document.querySelectorAll('.auto-gen-diff-cb').forEach(cb => {
+        cb.checked = false;
+        document.getElementById(`autoGenDiffCount${cb.value}`).classList.add('hidden');
+        document.getElementById(`autoGenDiffCount${cb.value}`).value = '';
+      });
       document.getElementById('autoGenError').classList.add('hidden');
 
       const timeArea = document.getElementById('autoGenTimeArea');
@@ -1950,12 +1986,22 @@
       const type = document.getElementById('autoGenType').value;
       const name = document.getElementById('autoGenName').value.trim();
       const count = parseInt(document.getElementById('autoGenCount').value);
-      const diff = document.getElementById('autoGenDiff').value;
+      
+      const diffConfigs = [];
+      let sumSpecific = 0;
+      document.querySelectorAll('.auto-gen-diff-cb:checked').forEach(cb => {
+        const dVal = parseInt(cb.value);
+        const inputVal = document.getElementById(`autoGenDiffCount${dVal}`).value;
+        const dCount = inputVal ? parseInt(inputVal) : null;
+        if (dCount) sumSpecific += dCount;
+        diffConfigs.push({ difficulty: dVal, count: dCount });
+      });
 
       if (!name) { showErr('autoGenError', 'Vui lòng nhập tên'); return; }
       if (isNaN(count) || count < 1) { showErr('autoGenError', 'Số lượng không hợp lệ'); return; }
+      if (sumSpecific > count) { showErr('autoGenError', 'Tổng số câu ở các độ khó lớn hơn tổng số câu của kỳ thi'); return; }
 
-      let body = { name, count, difficulty: diff ? parseInt(diff) : null };
+      let body = { name, count, diffConfigs: diffConfigs.length > 0 ? diffConfigs : null };
       let url = '';
 
       if (type === 'contest') {
@@ -3379,19 +3425,39 @@
 
     function filterPsQuestions() {
       const q = document.getElementById('psQSearch').value.toLowerCase();
-      const filtered = allQuestionsForPs.filter(x =>
+      let filtered = allQuestionsForPs.filter(x =>
         x.title.toLowerCase().includes(q) || (x.description || '').toLowerCase().includes(q)
       );
+
+      const sortVal = document.getElementById('psQSort')?.value || 'newest';
+      filtered.sort((a, b) => {
+        if (sortVal === 'newest') return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        if (sortVal === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        if (sortVal === 'diff_desc') return (b.difficulty || 0) - (a.difficulty || 0);
+        if (sortVal === 'diff_asc') return (a.difficulty || 0) - (b.difficulty || 0);
+        if (sortVal === 'selected_first') {
+          const aSel = psSelectedIds.has(a.id) ? 1 : 0;
+          const bSel = psSelectedIds.has(b.id) ? 1 : 0;
+          if (aSel !== bSel) return bSel - aSel;
+          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        }
+        return 0;
+      });
+
       const typeLabels = { single: 'Chọn 1', multiple: 'Chọn nhiều', matching: 'Nối đôi', ordering: 'Sắp xếp' };
       const list = document.getElementById('psQList');
       list.innerHTML = filtered.slice(0, 100).map(q => {
         const checked = psSelectedIds.has(q.id);
+        const diffStars = '★'.repeat(q.difficulty || 1) + '☆'.repeat(5 - (q.difficulty || 1));
         return `
       <label class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50 transition">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePsQuestion('${q.id}', this.checked)"
           class="w-4 h-4 rounded text-indigo-600"/>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-700 truncate">${esc(q.title)}</p>
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-medium text-gray-700 truncate">${esc(q.title)}</p>
+            <span class="text-[10px] text-amber-500 font-mono tracking-tighter" title="Độ khó: ${q.difficulty||1}">${diffStars}</span>
+          </div>
           <p class="text-xs text-gray-400">${typeLabels[q.question_type] || q.question_type}</p>
         </div>
       </label>`;

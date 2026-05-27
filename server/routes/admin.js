@@ -3,6 +3,47 @@ const supabase = require('../supabase');
 const { invalidateContestQuestions } = require('../cache');
 const router = express.Router();
 
+async function autoSelectQuestions(supabase, count, diffConfigs) {
+  const selectedIds = [];
+  
+  if (!diffConfigs || diffConfigs.length === 0) {
+    const { data: qData, error: qError } = await supabase.from('questions').select('id');
+    if (qError) throw qError;
+    if (!qData || qData.length < count) throw new Error(`Ngân hàng chỉ có ${qData?.length || 0} câu hỏi phù hợp, không đủ ${count} câu.`);
+    return qData.sort(() => 0.5 - Math.random()).slice(0, count).map(q => q.id);
+  }
+
+  let remainingToRandomPickDiffs = [];
+  
+  for (const conf of diffConfigs) {
+    if (conf.count) {
+      const { data, error } = await supabase.from('questions').select('id').eq('difficulty', conf.difficulty);
+      if (error) throw error;
+      if (data.length < conf.count) throw new Error(`Không đủ câu hỏi cho độ khó ${conf.difficulty} (cần ${conf.count}, có ${data.length}).`);
+      
+      const shuffled = data.sort(() => 0.5 - Math.random()).slice(0, conf.count);
+      selectedIds.push(...shuffled.map(q => q.id));
+    } else {
+      remainingToRandomPickDiffs.push(conf.difficulty);
+    }
+  }
+
+  const remainingCount = count - selectedIds.length;
+  if (remainingCount > 0) {
+    const diffsToPick = remainingToRandomPickDiffs.length > 0 ? remainingToRandomPickDiffs : diffConfigs.map(c => c.difficulty);
+    const { data, error } = await supabase.from('questions').select('id').in('difficulty', diffsToPick);
+    if (error) throw error;
+    
+    const filtered = data.filter(q => !selectedIds.includes(q.id));
+    if (filtered.length < remainingCount) throw new Error(`Không đủ câu hỏi phù hợp cho phần ngẫu nhiên (cần ${remainingCount}, có ${filtered.length}). Vui lòng chọn thêm độ khó hoặc giảm số lượng.`);
+    
+    const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, remainingCount);
+    selectedIds.push(...shuffled.map(q => q.id));
+  }
+  
+  return selectedIds;
+}
+
 function adminAuth(req, res, next) {
   if (req.headers['x-admin-password'] !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Sai mật khẩu admin' });
@@ -50,24 +91,16 @@ router.put('/contests/:id', async (req, res) => {
 });
 
 router.post('/contests/auto', async (req, res) => {
-  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment, scoring_scale, count, difficulty } = req.body;
+  const { name, description, start_time, end_time, is_public, require_login, is_ai_assessment, scoring_scale, count, diffConfigs } = req.body;
   
   if (!count || count < 1) return res.status(400).json({ error: 'Số lượng câu hỏi không hợp lệ' });
 
-  let query = supabase.from('questions').select('id');
-  if (difficulty !== undefined && difficulty !== null && difficulty !== '') {
-    query = query.eq('difficulty', difficulty);
+  let selectedIds;
+  try {
+    selectedIds = await autoSelectQuestions(supabase, count, diffConfigs);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
-  const { data: qData, error: qError } = await query;
-  if (qError) return res.status(500).json({ error: qError.message });
-  
-  if (!qData || qData.length < count) {
-    return res.status(400).json({ error: `Ngân hàng chỉ có ${qData?.length || 0} câu hỏi phù hợp, không đủ ${count} câu.` });
-  }
-
-  // Shuffle and pick
-  const shuffled = qData.sort(() => 0.5 - Math.random());
-  const selectedIds = shuffled.slice(0, count).map(q => q.id);
 
   // Create contest
   const { data: contestData, error: contestError } = await supabase.from('contests')
@@ -82,10 +115,11 @@ router.post('/contests/auto', async (req, res) => {
   if (contestError) return res.status(500).json({ error: contestError.message });
 
   // Create contest_questions
+  const getAlphabetLabel = i => i < 26 ? String.fromCharCode(65 + i) : String.fromCharCode(65 + Math.floor(i/26) - 1) + String.fromCharCode(65 + (i%26));
   const rows = selectedIds.map((id, index) => ({
     contest_id: contestData.id,
     question_id: id,
-    label: `Q${index + 1}`,
+    label: getAlphabetLabel(index),
     order_num: index
   }));
   const { error: cqError } = await supabase.from('contest_questions').insert(rows);
@@ -435,25 +469,17 @@ router.post('/practice-sets', async (req, res) => {
 });
 
 router.post('/practice-sets/auto', async (req, res) => {
-  const { name, description, scoring_scale, is_public, count, difficulty } = req.body;
+  const { name, description, scoring_scale, is_public, count, diffConfigs } = req.body;
   
   if (!name) return res.status(400).json({ error: 'Tên bộ ôn tập không được để trống' });
   if (!count || count < 1) return res.status(400).json({ error: 'Số lượng câu hỏi không hợp lệ' });
 
-  let query = supabase.from('questions').select('id');
-  if (difficulty !== undefined && difficulty !== null && difficulty !== '') {
-    query = query.eq('difficulty', difficulty);
+  let selectedIds;
+  try {
+    selectedIds = await autoSelectQuestions(supabase, count, diffConfigs);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
-  const { data: qData, error: qError } = await query;
-  if (qError) return res.status(500).json({ error: qError.message });
-  
-  if (!qData || qData.length < count) {
-    return res.status(400).json({ error: `Ngân hàng chỉ có ${qData?.length || 0} câu hỏi phù hợp, không đủ ${count} câu.` });
-  }
-
-  // Shuffle and pick
-  const shuffled = qData.sort(() => 0.5 - Math.random());
-  const selectedIds = shuffled.slice(0, count).map(q => q.id);
 
   const { data, error } = await supabase.from('practice_sets')
     .insert({ 
