@@ -568,6 +568,12 @@ input, textarea, select {
   <span>Xem bảng xếp hạng</span>
 </button>
 
+<!-- Floating problems button -->
+<button id="floatingProblemsBtn" onclick="showTab('problems')" class="hidden fixed bottom-6 right-6 z-[99] flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 transform active:translate-y-0">
+  <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+  <span>Xem câu hỏi</span>
+</button>
+
 <!-- Main content -->
 <main class="contest-main" id="contestMain">
 
@@ -1863,15 +1869,26 @@ function showTab(tab) {
   if (tab === 'org-ranking') { renderOrgRanking(); renderScoreboardStats(scoreboard.questions, scoreboard.rows); }
   if (tab === 'problems') renderProblems();
 
-  // Floating scoreboard button visibility
-  const floatingBtn = document.getElementById('floatingScoreboardBtn');
-  if (floatingBtn) {
-    const isCandidate = token && myParticipantId;
-    const isLobby = !document.getElementById('pane-lobby').classList.contains('hidden');
+  // Floating buttons visibility
+  const floatingScoreboardBtn = document.getElementById('floatingScoreboardBtn');
+  const floatingProblemsBtn = document.getElementById('floatingProblemsBtn');
+  const isCandidate = token && myParticipantId;
+  const isLobby = !document.getElementById('pane-lobby').classList.contains('hidden');
+
+  // Show "Xem bảng xếp hạng" when NOT on scoreboard
+  if (floatingScoreboardBtn) {
     if (isCandidate && !isLobby && tab !== 'scoreboard') {
-      floatingBtn.classList.remove('hidden');
+      floatingScoreboardBtn.classList.remove('hidden');
     } else {
-      floatingBtn.classList.add('hidden');
+      floatingScoreboardBtn.classList.add('hidden');
+    }
+  }
+  // Show "Xem câu hỏi" when ON scoreboard
+  if (floatingProblemsBtn) {
+    if (isCandidate && !isLobby && tab === 'scoreboard') {
+      floatingProblemsBtn.classList.remove('hidden');
+    } else {
+      floatingProblemsBtn.classList.add('hidden');
     }
   }
 
