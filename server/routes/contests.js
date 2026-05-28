@@ -61,11 +61,30 @@ router.get('/:id/scoreboard', async (req, res) => {
     .select('id, nickname, organization')
     .eq('contest_id', contestId);
 
-  const { data: submissions } = await supabase
-    .from('submissions')
-    .select('participant_id, question_id, status, submitted_at')
-    .eq('contest_id', contestId)
-    .order('submitted_at', { ascending: true });
+  let submissions = [];
+  let from = 0;
+  const limit = 1000;
+  let hasMore = true;
+  while (hasMore) {
+    const { data: chunk, error } = await supabase
+      .from('submissions')
+      .select('participant_id, question_id, status, submitted_at')
+      .eq('contest_id', contestId)
+      .order('submitted_at', { ascending: true })
+      .range(from, from + limit - 1);
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    if (chunk && chunk.length > 0) {
+      submissions.push(...chunk);
+      from += chunk.length;
+      if (chunk.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
 
   const startTime = new Date(contest.start_time);
   const questions = (contestQuestions || []).map(cq => ({

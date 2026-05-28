@@ -202,11 +202,30 @@ router.get('/contests/:contestId/participants', async (req, res) => {
     .order('joined_at', { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
 
-  // Đếm số bài nộp cho mỗi thí sinh
-  const { data: counts } = await supabase
-    .from('submissions')
-    .select('participant_id, status')
-    .eq('contest_id', contestId);
+  // Đếm số bài nộp cho mỗi thí sinh (sử dụng batching để vượt qua giới hạn 1000 dòng)
+  let counts = [];
+  let from = 0;
+  const limit = 1000;
+  let hasMore = true;
+  while (hasMore) {
+    const { data: chunk, error } = await supabase
+      .from('submissions')
+      .select('participant_id, status')
+      .eq('contest_id', contestId)
+      .range(from, from + limit - 1);
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    if (chunk && chunk.length > 0) {
+      counts.push(...chunk);
+      from += chunk.length;
+      if (chunk.length < limit) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
 
   const countMap = {};
   for (const s of (counts || [])) {
