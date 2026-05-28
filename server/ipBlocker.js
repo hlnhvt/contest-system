@@ -47,6 +47,17 @@ async function ipBlockMiddleware(req, res, next) {
   if (contestId) {
     const blocked = await isIPBlocked(ip, contestId);
     if (blocked) {
+      // Kiểm tra xem kỳ thi đã kết thúc chưa. Nếu kết thúc rồi thì cho phép truy cập để xem lại scoreboard
+      const { data: contest } = await supabase
+        .from('contests')
+        .select('end_time')
+        .eq('id', contestId)
+        .maybeSingle();
+
+      if (contest && new Date() > new Date(contest.end_time)) {
+        return next();
+      }
+
       return res.status(403).json({ 
         error: 'ip_blocked', 
         message: 'Địa chỉ IP của bạn đã bị khóa do vi phạm quy chế thi (chuyển tab quá số lần quy định)!' 
