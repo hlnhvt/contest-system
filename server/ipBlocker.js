@@ -31,20 +31,28 @@ async function isIPBlocked(ip, contestId) {
 async function ipBlockMiddleware(req, res, next) {
   const ip = getClientIP(req);
   let contestId = req.params.contestId || req.params.id || req.body.contestId || req.query.contestId;
+  let participant = null;
 
-  // If contestId is not found, attempt to fetch it from the participant token in the headers
-  if (!contestId && req.headers.authorization) {
-    const token = req.headers.authorization.replace('Bearer ', '');
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (token) {
     const { data: p } = await supabase
       .from('participants')
-      .select('contest_id')
+      .select('id, contest_id, violations')
       .eq('token', token)
       .maybeSingle();
       
-    if (p) contestId = p.contest_id;
+    if (p) {
+      participant = p;
+      if (!contestId) contestId = p.contest_id;
+    }
   }
 
   if (contestId) {
+    // If the participant themselves is unblocked (violations < 5), do not block them!
+    if (participant && participant.violations < 5) {
+      return next();
+    }
+
     const blocked = await isIPBlocked(ip, contestId);
     if (blocked) {
       // Kiểm tra xem kỳ thi đã kết thúc chưa. Nếu kết thúc rồi thì cho phép truy cập để xem lại scoreboard
