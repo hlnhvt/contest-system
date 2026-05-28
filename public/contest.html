@@ -562,6 +562,12 @@ input, textarea, select {
   </div>
 </aside>
 
+<!-- Floating scoreboard button -->
+<button id="floatingScoreboardBtn" onclick="showTab('scoreboard')" class="hidden fixed bottom-6 right-6 z-[99] flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 px-5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 transform active:translate-y-0">
+  <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+  <span>Xem bảng xếp hạng</span>
+</button>
+
 <!-- Main content -->
 <main class="contest-main" id="contestMain">
 
@@ -779,6 +785,17 @@ input, textarea, select {
       <!-- Submit -->
       <div id="submitArea"></div>
 
+      <!-- Explanation -->
+      <div id="explanationContainer" class="mt-6 mb-5 hidden bg-emerald-50/50 border border-emerald-200 rounded-xl p-4">
+        <div class="flex items-start gap-2.5">
+          <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div>
+            <h4 class="font-bold text-emerald-800 text-sm">Đáp án & Giải thích:</h4>
+            <p id="explanationText" class="text-emerald-700 text-xs mt-1 leading-relaxed whitespace-pre-wrap"></p>
+          </div>
+        </div>
+      </div>
+
       <!-- History -->
       <div class="mt-5 pt-5 border-t border-gray-100">
         <div class="flex items-center gap-2 mb-3">
@@ -973,24 +990,40 @@ async function init() {
       `<div class="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10"><div class="w-6 h-6 rounded-full bg-emerald-400 text-emerald-950 flex items-center justify-center font-bold text-xs">${esc(nickname[0].toUpperCase())}</div><div class="leading-tight"><div>${esc(nickname)}</div>${myOrganization ? `<div style="font-size:10px;opacity:0.7">${esc(myOrganization)}</div>` : ''}</div></div>`;
   }
 
-  const [contestRes, questionsRes, configRes] = await Promise.all([
+  const [contestRes, configRes] = await Promise.all([
     fetch(`/api/contests/${CONTEST_ID}`),
-    fetch(`/api/questions/contest/${CONTEST_ID}`),
     fetch('/api/config')
   ]);
 
-  if (contestRes.status === 403 || questionsRes.status === 403) {
+  if (contestRes.status === 403) {
     showIPBlockedScreen();
     return;
   }
 
   contestData = await contestRes.json();
-    if (nickname) renderUserDisplay();
-  questions   = await questionsRes.json();
+  if (nickname) renderUserDisplay();
   const config = await configRes.json();
 
   document.title = contestData.name + ' - Hệ thống đánh giá';
   document.getElementById('contestName').textContent = contestData.name;
+
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
+
+  // Fetch questions if candidate (token present) or post-contest spectator (hasEnded)
+  let questionsRes;
+  if (token || hasEnded) {
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    questionsRes = await fetch(`/api/questions/contest/${CONTEST_ID}`, { headers });
+  } else {
+    questionsRes = { ok: true, status: 200, json: async () => [] };
+  }
+
+  if (questionsRes.status === 403) {
+    showIPBlockedScreen();
+    return;
+  }
+
+  questions = await questionsRes.json();
 
   // Auto-reload when admin changes start_time / end_time
   setInterval(async () => {
@@ -1011,6 +1044,17 @@ async function init() {
   }
 
   const isUpcoming = new Date() < new Date(contestData.start_time);
+
+  if (!token || !myParticipantId) {
+    const tabProblems = document.getElementById('tab-problems');
+    if (tabProblems) {
+      if (hasEnded) {
+        tabProblems.style.display = '';
+      } else {
+        tabProblems.style.display = 'none';
+      }
+    }
+  }
 
   renderProblems();
   startTimer();
@@ -1050,6 +1094,13 @@ async function init() {
   } else {
     await loadScoreboard();
     _scoreboardPollInterval = setInterval(() => loadScoreboard(), 5000);
+
+    // Default tab for candidates is Problems (Questions)
+    if (token && myParticipantId) {
+      showTab('problems');
+    } else {
+      showTab('scoreboard');
+    }
   }
 
   if (myParticipantId && token) {
@@ -1058,7 +1109,8 @@ async function init() {
 }
 
 function setupProctoring() {
-  // 1. Chặn chuột phải và các phím tắt copy/paste
+  // 1. Chặn chuột phải và các phím tắt copy/paste (chỉ chặn khi kỳ thi chưa kết thúc)
+  // 1. Chặn chuột phải và các phím tắt copy/paste vô điều kiện (kể cả khi đã kết thúc)
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('copy', e => e.preventDefault());
   document.addEventListener('cut', e => e.preventDefault());
@@ -1075,6 +1127,9 @@ function setupProctoring() {
   let isCheckingTab = false;
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'hidden') {
+      const hasEnded = contestData && new Date() > new Date(contestData.end_time);
+      if (hasEnded) return; // Bỏ qua nếu kỳ thi đã kết thúc
+      
       if (isCheckingTab) return;
       isCheckingTab = true;
       try {
@@ -1302,25 +1357,25 @@ function renderProblems() {
     const absIdx = startIdx + idx;
     const r = myRow?.questions?.[q.label];
 
-    let statusBadge, leftBorder;
-    if (!myRow) {
-      statusBadge = '';
-      leftBorder  = '';
-    } else if (r?.solved) {
+    let statusBadge, leftBorder, cardBg;
+    if (r?.solved) {
       statusBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
         Đã giải · ${r.time}m${r.attempts > 1 ? ` · ${r.attempts} lần` : ''}
       </span>`;
-      leftBorder  = 'border-l-4 border-emerald-400';
+      leftBorder  = 'border-l-4 border-emerald-500';
+      cardBg      = 'bg-emerald-50/20';
     } else if (r?.attempts > 0) {
       statusBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
         Chưa đúng · ${r.attempts} lần
       </span>`;
-      leftBorder  = 'border-l-4 border-red-400';
+      leftBorder  = 'border-l-4 border-red-500';
+      cardBg      = 'bg-red-50/10';
     } else {
       statusBadge = `<span class="text-[11px] text-gray-400 italic">Chưa trả lời</span>`;
-      leftBorder  = 'border-l-4 border-gray-200';
+      leftBorder  = 'border-l-4 border-gray-300';
+      cardBg      = 'bg-white';
     }
 
     const solvedCount = rows?.filter(row => row.questions?.[q.label]?.solved).length || 0;
@@ -1328,10 +1383,13 @@ function renderProblems() {
     const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
 
     return `
-    <div onclick="openProblem('${esc(q.label)}')" class="flex items-center gap-4 px-4 py-4 hover:bg-emerald-50 cursor-pointer transition-colors ${leftBorder}">
+    <div onclick="openProblem('${esc(q.label)}')" class="flex items-center gap-4 px-4 py-4 ${cardBg} hover:bg-emerald-50/50 cursor-pointer transition-colors ${leftBorder}">
       <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-gradient-to-br ${GRAD_COLORS[absIdx%GRAD_COLORS.length]} flex items-center justify-center text-white font-bold text-lg shadow-sm">${esc(q.label)}</div>
       <div class="flex-1 min-w-0">
-        <h3 class="font-bold text-gray-900 text-sm truncate">${esc(q.title)}</h3>
+        <h3 class="font-bold text-gray-900 text-sm truncate flex items-center gap-1.5">
+          ${esc(q.title)}
+          ${r?.solved ? '<span class="text-emerald-600 font-bold" title="Đã giải thành công">✓</span>' : ''}
+        </h3>
         <div class="flex items-center gap-3 mt-1 flex-wrap">
           ${statusBadge}
         </div>
@@ -1418,9 +1476,23 @@ async function openProblem(label) {
   renderSubmitArea(alreadySolved);
   renderHistory(q, history);
 
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
+  const expContainer = document.getElementById('explanationContainer');
+  if (expContainer) {
+    if (hasEnded && q.explanation) {
+      document.getElementById('explanationText').textContent = q.explanation;
+      expContainer.classList.remove('hidden');
+    } else {
+      expContainer.classList.add('hidden');
+    }
+  }
+
   if (alreadySolved) {
     document.getElementById('modalLabelBadge').className = 'label-badge solved';
     document.getElementById('modalStatus').textContent = '✓ Đã giải xong';
+  } else if (hasEnded) {
+    document.getElementById('modalLabelBadge').className = 'label-badge solved';
+    document.getElementById('modalStatus').textContent = '✓ Kỳ thi đã kết thúc';
   } else {
     const hints = {
       single: 'Chọn một đáp án và nhấn nộp',
@@ -1435,15 +1507,21 @@ async function openProblem(label) {
 // ─── Single choice ───────────────────────────
 function renderSingleChoices(q, alreadySolved, history) {
   const container = document.getElementById('choicesContainer');
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
   const correctSub = history.find(s => s.status === 'correct');
   const wrongSet   = new Set(history.filter(s => s.status === 'wrong').map(s => s.answer_index));
+  const disabled = alreadySolved || hasEnded;
+
   container.innerHTML = (q.choices || []).map((ch, i) => {
     let cls = 'choice-card';
     if (alreadySolved) {
       if (correctSub?.answer_index === i) cls += ' correct';
       else if (wrongSet.has(i)) cls += ' wrong-pick';
+    } else if (hasEnded) {
+      if (q.correct_index === i) cls += ' correct';
+      else if (wrongSet.has(i)) cls += ' wrong-pick';
     }
-    return `<button class="${cls}" id="choice-${i}" onclick="selectSingle(${i})" ${alreadySolved?'disabled':''}>
+    return `<button class="${cls}" id="choice-${i}" onclick="selectSingle(${i})" ${disabled?'disabled':''}>
       <span class="choice-circle" id="cc-${i}">${CHOICE_LABELS[i]||i}</span>
       <span class="text-sm text-gray-800 flex-1 leading-relaxed">${esc(ch)}</span>
     </button>`;
@@ -1460,18 +1538,21 @@ function selectSingle(idx) {
 // ─── Multiple choice ─────────────────────────
 function renderMultipleChoices(q, alreadySolved, history) {
   const container = document.getElementById('choicesContainer');
-  selectedAnswer = alreadySolved ? null : [];
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
+  selectedAnswer = (alreadySolved || hasEnded) ? null : [];
   const correctSub = history.find(s => s.status === 'correct');
-  const correctAns = correctSub?.answer || null; // array of correct indices
+  const correctAns = correctSub?.answer || q.correct_answer || null;
+  const disabled = alreadySolved || hasEnded;
+
   container.innerHTML = (q.choices || []).map((ch, i) => {
     let cls = 'choice-card';
-    if (alreadySolved && correctAns) {
+    if ((alreadySolved || hasEnded) && correctAns) {
       cls += correctAns.includes(i) ? ' multi-correct' : '';
     }
-    return `<button class="${cls}" id="mchoice-${i}" onclick="selectMultiple(${i})" ${alreadySolved?'disabled':''}>
+    return `<button class="${cls}" id="mchoice-${i}" onclick="selectMultiple(${i})" ${disabled?'disabled':''}>
       <span class="choice-circle" id="mcc-${i}" style="border-radius:4px">${CHOICE_LABELS[i]||i}</span>
       <span class="text-sm text-gray-800 flex-1 leading-relaxed">${esc(ch)}</span>
-      ${alreadySolved && correctAns?.includes(i) ? '<span class="text-emerald-500 font-bold ml-auto">✓</span>' : ''}
+      ${(alreadySolved || hasEnded) && correctAns?.includes(i) ? '<span class="text-emerald-500 font-bold ml-auto">✓</span>' : ''}
     </button>`;
   }).join('');
 }
@@ -1490,23 +1571,25 @@ function selectMultiple(idx) {
 // ─── Matching ────────────────────────────────
 function renderMatchingChoices(q, alreadySolved, history) {
   const container = document.getElementById('choicesContainer');
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
   const leftItems  = q.choices || [];
   const rightOpts  = q.match_options || [];
-  selectedAnswer   = alreadySolved ? null : new Array(leftItems.length).fill('');
+  const disabled = alreadySolved || hasEnded;
+  selectedAnswer   = disabled ? null : new Array(leftItems.length).fill('');
   const correctSub = history.find(s => s.status === 'correct');
-  const userAns    = correctSub?.answer || null;
+  const userAns    = correctSub?.answer || q.correct_answer || null;
 
   container.innerHTML = leftItems.map((left, i) => {
-    const chosen = alreadySolved ? (userAns?.[i] || '') : '';
-    const isCorrect = alreadySolved; // if solved, it must have been correct
-    const selCls = alreadySolved ? (isCorrect ? 'match-correct' : '') : '';
+    const chosen = (alreadySolved || hasEnded) ? (userAns?.[i] || '') : '';
+    const isCorrect = alreadySolved || hasEnded;
+    const selCls = (alreadySolved || hasEnded) ? (isCorrect ? 'match-correct' : '') : '';
     const opts = rightOpts.map(r =>
       `<option value="${esc(r)}" ${chosen===r?'selected':''}>${esc(r)}</option>`
     ).join('');
     return `<div class="flex items-center gap-3 mb-3">
       <div class="flex-1 text-sm font-medium text-gray-800 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">${esc(left)}</div>
       <svg class="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-      <select class="match-select flex-1 ${selCls}" id="match-${i}" onchange="updateMatch(${i},this.value)" ${alreadySolved?'disabled':''}>
+      <select class="match-select flex-1 ${selCls}" id="match-${i}" onchange="updateMatch(${i},this.value)" ${disabled?'disabled':''}>
         <option value="">— Chọn —</option>${opts}
       </select>
     </div>`;
@@ -1521,11 +1604,13 @@ function updateMatch(i, val) {
 let dragSrcIdx = null;
 function renderOrderingChoices(q, alreadySolved, history) {
   const container = document.getElementById('choicesContainer');
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
   const items = q.choices || [];
   const correctSub = history.find(s => s.status === 'correct');
   const userAns = correctSub?.answer || null;
+  const disabled = alreadySolved || hasEnded;
 
-  if (alreadySolved) {
+  if (alreadySolved || hasEnded) {
     selectedAnswer = null;
     container.innerHTML = items.map((it, i) => `
       <div class="order-item order-correct">
@@ -1615,6 +1700,15 @@ function renderChoices(q, alreadySolved, history) {
 
 function renderSubmitArea(alreadySolved) {
   const area = document.getElementById('submitArea');
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
+
+  if (hasEnded) {
+    area.innerHTML = `<div class="bg-blue-50 border border-blue-200 text-blue-700 rounded-xl p-4 text-sm text-center font-semibold">
+      Kỳ thi đã kết thúc. Bạn đang xem đáp án và giải thích chi tiết.
+    </div>`;
+    return;
+  }
+
   if (!token) {
     area.innerHTML = `<div class="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-4 text-sm text-center">
       Bạn cần <a href="/" class="font-bold underline">tham gia kỳ thi</a> để trả lời câu hỏi này.
@@ -1768,6 +1862,19 @@ function showTab(tab) {
   });
   if (tab === 'org-ranking') { renderOrgRanking(); renderScoreboardStats(scoreboard.questions, scoreboard.rows); }
   if (tab === 'problems') renderProblems();
+
+  // Floating scoreboard button visibility
+  const floatingBtn = document.getElementById('floatingScoreboardBtn');
+  if (floatingBtn) {
+    const isCandidate = token && myParticipantId;
+    const isLobby = !document.getElementById('pane-lobby').classList.contains('hidden');
+    if (isCandidate && !isLobby && tab !== 'scoreboard') {
+      floatingBtn.classList.remove('hidden');
+    } else {
+      floatingBtn.classList.add('hidden');
+    }
+  }
+
   // Close mobile menu after selecting a tab
   const sidebar = document.getElementById('contestSidebar');
   const backdrop = document.getElementById('mobileBackdrop');
@@ -1790,10 +1897,21 @@ function enterLobbyMode() {
 
 async function exitLobbyMode() {
   if (_lobbyPollInterval) { clearInterval(_lobbyPollInterval); _lobbyPollInterval = null; }
-  document.getElementById('tab-problems').style.display = '';
+  const hasEnded = contestData && new Date() > new Date(contestData.end_time);
+  if ((token && myParticipantId) || hasEnded) {
+    document.getElementById('tab-problems').style.display = '';
+  } else {
+    document.getElementById('tab-problems').style.display = 'none';
+  }
   document.getElementById('tab-org-ranking').style.display = '';
   document.getElementById('pane-lobby').classList.add('hidden');
-  showTab('scoreboard');
+  
+  if (token && myParticipantId) {
+    showTab('problems');
+  } else {
+    showTab('scoreboard');
+  }
+
   await loadScoreboard();
   renderProblems();
   if (!_scoreboardPollInterval) {

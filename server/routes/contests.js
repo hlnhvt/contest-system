@@ -394,14 +394,30 @@ router.post('/:id/violations', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Chưa xác thực' });
 
-  const { data: participant, error: pErr } = await supabase
-    .from('participants')
-    .select('*')
-    .eq('token', token)
-    .single();
+  const [pResult, contestResult] = await Promise.all([
+    supabase
+      .from('participants')
+      .select('*')
+      .eq('token', token)
+      .single(),
+    supabase
+      .from('contests')
+      .select('end_time')
+      .eq('id', req.params.id)
+      .single()
+  ]);
+
+  const participant = pResult.data;
+  const pErr = pResult.error;
+  const contest = contestResult.data;
 
   if (pErr || !participant || participant.contest_id !== req.params.id) {
     return res.status(403).json({ error: 'Thao tác không hợp lệ' });
+  }
+
+  // Nếu kỳ thi đã kết thúc, không ghi nhận thêm vi phạm
+  if (contest && new Date() > new Date(contest.end_time)) {
+    return res.json({ violations: participant.violations || 0 });
   }
 
   // Tăng số lần vi phạm trong DB
