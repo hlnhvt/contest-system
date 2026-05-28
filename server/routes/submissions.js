@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../supabase');
 const { getToken, setToken } = require('../cache');
+const { ipBlockMiddleware } = require('../ipBlocker');
 const router = express.Router();
 
 // Rate limit: mỗi participant chỉ nộp 1 lần / 2 giây cho cùng một câu hỏi
@@ -39,7 +40,7 @@ async function getParticipant(token) {
 }
 
 // Nộp đáp án
-router.post('/', async (req, res) => {
+router.post('/', ipBlockMiddleware, async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   const participant = await getParticipant(token);
   if (!participant) return res.status(401).json({ error: 'Chưa tham gia kỳ thi' });

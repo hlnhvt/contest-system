@@ -1,10 +1,11 @@
 const express = require('express');
 const supabase = require('../supabase');
 const { getContestQuestions, setContestQuestions } = require('../cache');
+const { ipBlockMiddleware } = require('../ipBlocker');
 const router = express.Router();
 
 // Lấy câu hỏi của một contest (KHÔNG trả về correct_index / correct_answer)
-router.get('/contest/:contestId', async (req, res) => {
+router.get('/contest/:contestId', ipBlockMiddleware, async (req, res) => {
   const { contestId } = req.params;
 
   const cached = getContestQuestions(contestId);

@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS participants (
   organization TEXT DEFAULT '',
   token TEXT NOT NULL UNIQUE,
   joined_at TIMESTAMPTZ DEFAULT NOW(),
+  violations INTEGER DEFAULT 0,
   UNIQUE(contest_id, nickname)
 );
 
@@ -239,3 +240,21 @@ CREATE POLICY "admin_update_requests" ON ai_account_requests FOR UPDATE USING ((
 -- ALTER TABLE contests ADD COLUMN IF NOT EXISTS require_login BOOLEAN DEFAULT FALSE;
 -- ALTER TABLE contests ADD COLUMN IF NOT EXISTS is_ai_assessment BOOLEAN DEFAULT FALSE;
 -- ALTER TABLE participants ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+-- ALTER TABLE participants ADD COLUMN IF NOT EXISTS violations INTEGER DEFAULT 0;
+
+-- Blocked IPs Table
+CREATE TABLE IF NOT EXISTS blocked_ips (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contest_id UUID NOT NULL REFERENCES contests(id) ON DELETE CASCADE,
+  participant_id UUID REFERENCES participants(id) ON DELETE CASCADE,
+  ip_address TEXT NOT NULL,
+  nickname TEXT NOT NULL,
+  organization TEXT DEFAULT '',
+  blocked_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(contest_id, ip_address)
+);
+
+ALTER TABLE blocked_ips ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public_read_blocked_ips" ON blocked_ips;
+CREATE POLICY "public_read_blocked_ips" ON blocked_ips FOR SELECT USING (true);
+

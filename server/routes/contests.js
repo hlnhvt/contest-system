@@ -1,5 +1,6 @@
 const express = require('express');
 const supabase = require('../supabase');
+const { getClientIP } = require('../ipBlocker');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -58,7 +59,7 @@ router.get('/:id/scoreboard', async (req, res) => {
 
   const { data: participants } = await supabase
     .from('participants')
-    .select('id, nickname, organization')
+    .select('id, nickname, organization, violations')
     .eq('contest_id', contestId);
 
   let submissions = [];
@@ -96,7 +97,7 @@ router.get('/:id/scoreboard', async (req, res) => {
   // Build stats per participant per question
   const statsMap = {};
   for (const p of (participants || [])) {
-    statsMap[p.id] = { nickname: p.nickname, organization: p.organization || '', questions: {} };
+    statsMap[p.id] = { nickname: p.nickname, organization: p.organization || '', violations: p.violations || 0, questions: {} };
   }
 
   for (const sub of (submissions || [])) {
@@ -197,7 +198,7 @@ router.get('/:id/scoreboard', async (req, res) => {
       }
     }
 
-    return { participantId: pid, nickname: data.nickname, organization: data.organization, totalSolved, totalPenalty, questions: questionResults };
+    return { participantId: pid, nickname: data.nickname, organization: data.organization, violations: data.violations || 0, totalSolved, totalPenalty, questions: questionResults };
   });
 
   rows.sort((a, b) => {
@@ -386,6 +387,53 @@ router.put('/:id/participants/:participantId', async (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+// Ghi nhận vi phạm chuyển tab
+router.post('/:id/violations', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Chưa xác thực' });
+
+  const { data: participant, error: pErr } = await supabase
+    .from('participants')
+    .select('*')
+    .eq('token', token)
+    .single();
+
+  if (pErr || !participant || participant.contest_id !== req.params.id) {
+    return res.status(403).json({ error: 'Thao tác không hợp lệ' });
+  }
+
+  // Tăng số lần vi phạm trong DB
+  const newViolations = (participant.violations || 0) + 1;
+  const { data: updated, error: uErr } = await supabase
+    .from('participants')
+    .update({ violations: newViolations })
+    .eq('id', participant.id)
+    .select()
+    .single();
+
+  if (uErr) return res.status(500).json({ error: uErr.message });
+
+  // Nếu vi phạm từ 5 lần trở lên, thực hiện chặn IP
+  if (newViolations >= 5) {
+    const ip = getClientIP(req);
+    const { error: blockErr } = await supabase
+      .from('blocked_ips')
+      .insert({
+        contest_id: participant.contest_id,
+        participant_id: participant.id,
+        ip_address: ip,
+        nickname: participant.nickname,
+        organization: participant.organization || ''
+      });
+      
+    if (blockErr && blockErr.code !== '23505') { // Bỏ qua lỗi trùng khoá IP (nếu đã bị chặn trước đó)
+      console.error("Error inserting blocked IP:", blockErr.message);
+    }
+  }
+
+  res.json({ violations: newViolations });
 });
 
 module.exports = router;

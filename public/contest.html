@@ -449,9 +449,66 @@ body { overflow-x: hidden; }
   .mobile-menu-btn { display: none !important; }
   .mobile-backdrop { display: none !important; }
 }
+
+/* Chặn sao chép & bôi đen */
+.noselect, body, html, main, div, p, span, tr, td, th {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+input, textarea, select {
+  -webkit-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* Glassmorphism Blocked Overlay */
+.blocked-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(12px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.blocked-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  border-radius: 24px;
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
 </style>
 </head>
 <body>
+
+<!-- BỊ KHÓA TRUY CẬP OVERLAY -->
+<div id="blockedOverlay" class="blocked-overlay hidden">
+  <div class="blocked-card animate-scale-in">
+    <div class="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+      <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+    </div>
+    <h2 class="text-2xl font-extrabold text-white mb-3">TÀI KHOẢN BỊ KHÓA</h2>
+    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+      Địa chỉ IP của bạn đã bị khóa tạm thời khỏi kỳ thi này do phát hiện hành vi **chuyển tab hoặc rời màn hình quá 5 lần**, vi phạm nghiêm trọng quy chế phòng thi.
+    </p>
+    <div class="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl mb-6">
+      <p class="text-xs text-red-400 font-semibold" id="blockedIpDisplay">Đang phát hiện IP...</p>
+    </div>
+    <p class="text-xs text-gray-500 leading-normal">
+      Vui lòng liên hệ Hội đồng thi hoặc giám thị phòng thi của bạn để được hỗ trợ đánh giá lại và mở khóa truy cập.
+    </p>
+  </div>
+</div>
 
 <!-- Sidebar -->
 <aside class="contest-sidebar collapsed" id="contestSidebar">
@@ -922,6 +979,11 @@ async function init() {
     fetch('/api/config')
   ]);
 
+  if (contestRes.status === 403 || questionsRes.status === 403) {
+    showIPBlockedScreen();
+    return;
+  }
+
   contestData = await contestRes.json();
     if (nickname) renderUserDisplay();
   questions   = await questionsRes.json();
@@ -989,6 +1051,73 @@ async function init() {
     await loadScoreboard();
     _scoreboardPollInterval = setInterval(() => loadScoreboard(), 5000);
   }
+
+  if (myParticipantId && token) {
+    setupProctoring();
+  }
+}
+
+function setupProctoring() {
+  // 1. Chặn chuột phải và các phím tắt copy/paste
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
+  document.addEventListener('cut', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 'a')) {
+      e.preventDefault();
+    }
+    if (e.key === 'F12') {
+      e.preventDefault();
+    }
+  });
+
+  // 2. Phát hiện chuyển tab
+  let isCheckingTab = false;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'hidden') {
+      if (isCheckingTab) return;
+      isCheckingTab = true;
+      try {
+        const res = await fetch(`/api/contests/${CONTEST_ID}/violations`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.status === 403) {
+          showIPBlockedScreen();
+        } else if (res.ok) {
+          const data = await res.json();
+          if (data.violations >= 5) {
+            showIPBlockedScreen();
+          } else {
+            alert(`CẢNH BÁO VI PHẠM:\nBạn vừa rời khỏi màn hình bài thi. Vi phạm chuyển tab: ${data.violations}/5.\nNếu vi phạm quá 5 lần, bạn sẽ bị khóa truy cập ngay lập tức!`);
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi gửi vi phạm:", err);
+      } finally {
+        isCheckingTab = false;
+      }
+    }
+  });
+}
+
+function showIPBlockedScreen() {
+  const overlay = document.getElementById('blockedOverlay');
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  
+  if (_scoreboardPollInterval) clearInterval(_scoreboardPollInterval);
+  
+  fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(async res => {
+      if (res.status === 403) {
+        document.getElementById('blockedIpDisplay').textContent = `Địa chỉ IP của bạn đã bị khóa truy cập khỏi kỳ thi!`;
+      }
+    })
+    .catch(() => {
+      document.getElementById('blockedIpDisplay').textContent = `IP của bạn đã bị khóa truy cập khỏi kỳ thi!`;
+    });
 }
 
 // ── Scoreboard ────────────────────────────────
@@ -1015,12 +1144,17 @@ async function loadScoreboard(updatedParticipantId) {
   }
   lastIsPublished = isPublished;
 
-  // Detect first solvers
+  // Detect first solvers chronologically based on minimum solve time
   firstSolvers = {};
+  const minSolveTimes = {};
   for (const row of (data.rows || [])) {
     for (const [label, result] of Object.entries(row.questions || {})) {
-      if (result?.solved && !firstSolvers[label]) {
-        firstSolvers[label] = row.participantId;
+      if (result?.solved) {
+        const solveTime = result.time; // in minutes from start
+        if (minSolveTimes[label] === undefined || solveTime < minSolveTimes[label]) {
+          minSolveTimes[label] = solveTime;
+          firstSolvers[label] = row.participantId;
+        }
       }
     }
   }
@@ -1082,7 +1216,8 @@ function renderScoreboard(flashParticipantId) {
 
     const isMe = row.participantId === myParticipantId;
     const shouldFlash = flashParticipantId === row.participantId;
-    const trClass = `${isMe ? 'my-row' : ''} ${shouldFlash ? 'flash-row' : ''}`;
+    const isViolated = row.violations >= 5;
+    const trClass = `${isMe ? 'my-row' : ''} ${shouldFlash ? 'flash-row' : ''} ${isViolated ? 'opacity-60 bg-red-50/20' : ''}`;
     const rank = displayRank <= 3 ? `<span class="medal">${medals[displayRank - 1]}</span>` : `<span class="rank-cell">${displayRank}</span>`;
 
     const cells = (qs||[]).map(q => {
@@ -1117,7 +1252,7 @@ function renderScoreboard(flashParticipantId) {
       <td style="text-align:center;padding:7px 4px">${rank}</td>
       <td class="${isMe && canEdit ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''}" ${isMe && canEdit ? 'onclick="openEditParticipantModal()"' : ''} style="padding:7px 14px;font-weight:${isMe?700:500};color:${isMe?'#1d4ed8':'#1e293b'}" title="${isMe && canEdit ? 'Nhấn để sửa thông tin' : ''}">
         <div class="leading-tight">
-          <div>${esc(row.nickname)}${isMe ? '<span style="font-size:10px;color:#94a3b8;margin-left:4px">(bạn)</span>' : ''}</div>
+          <div>${esc(row.nickname)}${isMe ? '<span style="font-size:10px;color:#94a3b8;margin-left:4px">(bạn)</span>' : ''}${isViolated ? '<span class="text-xs text-red-500 font-medium ml-1.5">[Vi phạm]</span>' : ''}</div>
           ${row.organization ? `<div style="font-size:11px;color:#94a3b8;font-weight:400">${esc(row.organization)}</div>` : ''}
         </div>
       </td>

@@ -197,7 +197,7 @@ router.get('/contests/:contestId/participants', async (req, res) => {
   const { contestId } = req.params;
   const { data: participants, error } = await supabase
     .from('participants')
-    .select('id, nickname, organization, joined_at')
+    .select('id, nickname, organization, joined_at, violations')
     .eq('contest_id', contestId)
     .order('joined_at', { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
@@ -239,6 +239,31 @@ router.get('/contests/:contestId/participants', async (req, res) => {
     totalSubmissions: countMap[p.id]?.total || 0,
     correctSubmissions: countMap[p.id]?.correct || 0,
   })));
+});
+
+// Bỏ chặn IP và đặt lại vi phạm của thí sinh
+router.post('/contests/:contestId/participants/:participantId/unblock', async (req, res) => {
+  const { contestId, participantId } = req.params;
+  
+  // 1. Đặt lại số lần vi phạm về 0
+  const { error: pErr } = await supabase
+    .from('participants')
+    .update({ violations: 0 })
+    .eq('id', participantId)
+    .eq('contest_id', contestId);
+    
+  if (pErr) return res.status(500).json({ error: pErr.message });
+  
+  // 2. Xóa khỏi danh sách blocked_ips
+  const { error: bErr } = await supabase
+    .from('blocked_ips')
+    .delete()
+    .eq('contest_id', contestId)
+    .eq('participant_id', participantId);
+    
+  if (bErr) return res.status(500).json({ error: bErr.message });
+  
+  res.json({ ok: true });
 });
 
 router.delete('/contests/:contestId/participants/:participantId', async (req, res) => {

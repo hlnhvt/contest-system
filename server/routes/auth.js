@@ -2,10 +2,11 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const supabase = require('../supabase');
 const { getToken, setToken } = require('../cache');
+const { ipBlockMiddleware } = require('../ipBlocker');
 const router = express.Router();
 
 // Join a contest with nickname or Google Auth
-router.post('/join', async (req, res) => {
+router.post('/join', ipBlockMiddleware, async (req, res) => {
   const { contestId, nickname, organization } = req.body;
   const tokenHeader = req.headers.authorization?.replace('Bearer ', '');
   
@@ -83,7 +84,7 @@ router.post('/join', async (req, res) => {
 });
 
 // Verify token and get participant info
-router.get('/me', async (req, res) => {
+router.get('/me', ipBlockMiddleware, async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'No token' });
 

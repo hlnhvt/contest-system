@@ -21,3 +21,21 @@ ON CONFLICT DO NOTHING;
 
 -- 4. Xóa cột cũ
 ALTER TABLE questions DROP COLUMN IF EXISTS topic_group_id;
+
+-- 5. Anti-cheat & IP Blocker migrations
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS violations INTEGER DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS blocked_ips (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contest_id UUID NOT NULL REFERENCES contests(id) ON DELETE CASCADE,
+  participant_id UUID REFERENCES participants(id) ON DELETE CASCADE,
+  ip_address TEXT NOT NULL,
+  nickname TEXT NOT NULL,
+  organization TEXT DEFAULT '',
+  blocked_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(contest_id, ip_address)
+);
+
+ALTER TABLE blocked_ips ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public_read_blocked_ips" ON blocked_ips;
+CREATE POLICY "public_read_blocked_ips" ON blocked_ips FOR SELECT USING (true);
